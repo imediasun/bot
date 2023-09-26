@@ -2,7 +2,7 @@ from random import randint
 from uuid import uuid4
 from aiogram import types
 
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp
 from database import *
 from keyboards import *
@@ -15,6 +15,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(user_id)
     if not ban:
         await message.answer(_("Выберите время сесси(MSK):", lang),
                              reply_markup=vip_prac_time_ikb(lang))
@@ -25,6 +26,7 @@ async def all_text(message: types.Message):
 async def back_tour_main(callback: types.CallbackQuery):
     lang = await get_user_lang(callback.from_user.id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         await callback.message.answer(_("Вы вернулись в VIP Slots меню:", lang),
                                       reply_markup=vip_prac_time_ikb(lang))
@@ -40,6 +42,7 @@ async def cb_prac_vip(callback : types.CallbackQuery):
     time = callback.data.split('_')[2]
     lang = await get_user_lang(callback.from_user.id)
     prac = await get_vip_pracs(time)
+    await set_new_click(callback.from_user.id)
     if not prac:
         await callback.message.answer(_("На данное время слотов нету!", lang),
                                       reply_markup=back_vip_prac_ikb(lang))
@@ -88,6 +91,7 @@ async def next_vip_prac(callback : types.CallbackQuery, callback_data : dict):
     prac = await get_vip_pracs(callback_data['id'])
     all_prac = list(prac)[index: index + 2]
     index += 2
+    await set_new_click(callback.from_user.id)
     for data in all_prac:
         currency = await get_region_currency(lang)
         amount_curr = await get_amount_curr(currency)
@@ -126,16 +130,22 @@ async def next_vip_prac(callback : types.CallbackQuery, callback_data : dict):
 async def cb_buy_vip_prac(callback : types.CallbackQuery, callback_data : dict):
     lang = await get_user_lang(callback.from_user.id)
     ban = await cb_check_ban_user(callback)
+    amount = await get_amount_vip_prac(callback_data['id'])
+    await set_new_click(callback.from_user.id)
     if not ban:
-        payments = await get_payment()
-        ikb = InlineKeyboardMarkup()
-        for data in payments:
-            btn1 = InlineKeyboardButton(data[2], callback_data=f"vip_prac_{data[0]}_{callback_data['id']}")
-            ikb.add(btn1)
-        back = InlineKeyboardButton(f'🔙{_("Назад", lang)}', callback_data="back_vip_prac")
-        ikb.add(back)
-        await callback.message.reply(_("Выберите способ оплаты:", lang),
-                                     reply_markup=ikb)
+        if amount == 0:
+            await callback.message.answer(_("К сожалению слотов больше не осталось!", lang),
+                                          reply_markup=back_vip_prac_ikb(lang))
+        else:
+            payments = await get_payment()
+            ikb = InlineKeyboardMarkup()
+            for data in payments:
+                btn1 = InlineKeyboardButton(data[2], callback_data=f"vip_prac_{data[0]}_{callback_data['id']}")
+                ikb.add(btn1)
+            back = InlineKeyboardButton(f'🔙{_("Назад", lang)}', callback_data="back_vip_prac")
+            ikb.add(back)
+            await callback.message.reply(_("Выберите способ оплаты:", lang),
+                                         reply_markup=ikb)
     await callback.answer()
 
 
@@ -161,20 +171,26 @@ async def cb_card_vip_prac(callback : types.CallbackQuery):
     pay_number = randint(1000000, 9999999)
     username = f"@{callback.from_user.username}"
     await create_pay_event(pay_id, callback.from_user.id, "prac", username)
-    for data in card:
-        await callback.message.answer(f"{_('Актуальные реквизиты к оплате:', lang)}\n"
-                                      f"\n"
-                                      f"{data[3]}\n"
-                                      f"\n"
-                                      f"{_('Оплата', lang)} №{pay_number}\n"
-                                      f"{_('Название', lang)}: {tour_name}\n"
-                                      f"{_('Время', lang)}: {_(f'{time}:00 MSK', lang)}\n"
-                                      f"\n"
-                                      f"💳{_('Сумма к оплате', lang)}: {amount} {currency}\n"
-                                      f"\n"
-                                      f"❗{_('После оплаты отправьте чек!', lang)}",
-                                      reply_markup=pay_vip_prac_ikb(pay_id, tour_id, lang))
-        await update_pay_vip_slot(pay_id, pay_number, tour_id, data[2], amount, currency, time)
+    await set_new_click(callback.from_user.id)
+    amount_slots = await get_amount_vip_prac(tour_id)
+    if amount_slots == 0:
+        await callback.message.answer(_("К сожалению слотов больше не осталось!", lang),
+                                      reply_markup=back_vip_prac_ikb(lang))
+    else:
+        for data in card:
+            await callback.message.answer(f"{_('Актуальные реквизиты к оплате:', lang)}\n"
+                                          f"\n"
+                                          f"{data[3]}\n"
+                                          f"\n"
+                                          f"{_('Оплата', lang)} №{pay_number}\n"
+                                          f"{_('Название', lang)}: {tour_name}\n"
+                                          f"{_('Время', lang)}: {_(f'{time}:00 MSK', lang)}\n"
+                                          f"\n"
+                                          f"💳{_('Сумма к оплате', lang)}: {amount} {currency}\n"
+                                          f"\n"
+                                          f"❗{_('После оплаты отправьте чек!', lang)}",
+                                          reply_markup=pay_vip_prac_ikb(pay_id, tour_id, lang))
+            await update_pay_vip_slot(pay_id, pay_number, tour_id, data[2], amount, currency, time)
     await callback.message.delete()
     await callback.answer()
 
@@ -184,6 +200,7 @@ async def cb_back_prac_vip(callback : types.CallbackQuery, callback_data : dict)
     lang = await get_user_lang(callback.from_user.id)
     payments = await get_payment()
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         ikb = InlineKeyboardMarkup()
         for data in payments:

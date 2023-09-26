@@ -1,7 +1,7 @@
 from aiogram import types
 
 from main import dp
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 
 from database import *
 from keyboards import *
@@ -20,6 +20,7 @@ async def news_text(message: types.Message):
     ban = await check_ban_user(message)
     if not ban:
         if message.text == '🎶MUSIC':
+            await set_new_click(user_id)
             index = 0
             music = await get_popular_music()
             profile = await get_profile(message.from_user.id)
@@ -54,11 +55,14 @@ async def news_text(message: types.Message):
                 await message.answer(_("Все актуальные треки:", lang),
                                      reply_markup=ikb)
         elif message.text == '🔍Поиск':
+            await set_new_click(user_id)
             await message.answer("Введите название или исполнителя песни:")
             await MusicStatesGroup.text.set()
         elif message.text == '🚀Новинки':
+            await set_new_click(user_id)
             pass
         elif message.text == '🔥Популярная':
+            await set_new_click(user_id)
             await get_popular_music()
 
 
@@ -71,14 +75,17 @@ async def confirm_add_music(callback: types.CallbackQuery):
     ban = await cb_check_ban_user(callback)
     if not ban:
         if callback.data == 'next_all_music':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             await get_next_all_music()
             await callback.answer()
         elif callback.data == 'back_all_music':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             await get_back_all_music()
             await callback.answer()
         elif callback.data == 'next_popular_music':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             index += 5
             prev_index = index + 5
@@ -103,6 +110,7 @@ async def confirm_add_music(callback: types.CallbackQuery):
                                           reply_markup=ikb)
             await callback.answer()
         elif callback.data == 'back_popular_music':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             index -= 5
             prev_index = index - 5

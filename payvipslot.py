@@ -1,61 +1,62 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
-from hendlers import cb_check_ban_user
+from hendlers import cb_check_ban_user, set_new_click
 from main import dp, bot
 from config import admin_pay_slot, admin_get_cap_chat
 from database import *
 from keyboards import *
 from states import BuyVipSlotStatesGroup
 from translations import _
-from youngkb import main_young_menu_ikb, info_from_bd
+from youngkb import main_young_menu_ikb, info_from_bd, back_vip_prac_ikb
 
 
 @dp.callback_query_handler(tour_cb.filter(action='send_check_vip_slot'))
 async def cb_send_check_vip_slot(callback : types.CallbackQuery, callback_data : dict, state : FSMContext):
-    user_id = callback.from_user.id
-    lang = await get_user_lang(user_id)
-    ban = await cb_check_ban_user(callback)
-    if not ban:
-        async with state.proxy() as data:
-            data['check_id'] = callback_data['id']
-        await callback.message.answer(_("Отправьте чек:", lang),
-                                      reply_markup=cancel_kb(lang))
-        await BuyVipSlotStatesGroup.proof.set()
-    await callback.answer()
-
-
-@dp.callback_query_handler(tour_cb.filter(action='back_payment_vip_slot'))
-async def cb_back_pay_vip_slot(callback : types.CallbackQuery, callback_data : dict):
-    lang = await get_user_lang(callback.from_user.id)
-    check = await get_check_vip_slot(callback_data['id'])
-    payments = await get_payment()
-    ikb = InlineKeyboardMarkup()
-    for datas in check:
-        for data in payments:
-            btn1 = InlineKeyboardButton(data[2], callback_data=f"card_vip_slot_{data[0]}_{datas[9]}_{datas[17]}")
-            ikb.add(btn1)
-        back = InlineKeyboardButton(f'🔙{_("Назад", lang)}', callback_data=tour_cb.new(datas[9], "back_choose_card"))
-        ikb.add(back)
-    await callback.message.answer(_("Выберите способ оплаты:", lang),
-                                  reply_markup=ikb)
-    await callback.message.delete()
+    await send_check_vip_part1(callback, callback_data, state)
     await callback.answer()
 
 
 @dp.callback_query_handler(tour_cb.filter(action='change_check_vip_slot'))
 async def cb_change_check_vip_slot(callback : types.CallbackQuery, callback_data : dict, state : FSMContext):
+    await send_check_vip_part1(callback, callback_data, state)
+    await callback.message.delete()
+    await callback.answer()
+
+
+async def send_check_vip_part1(callback, callback_data, state):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
     if not ban:
+        await set_new_click(user_id)
+        check = await get_check_vip_slot(callback_data['id'])
+        for data in check:
+            if data[10] == "prac":
+                amount_slots = await get_amount_vip_prac(data[9])
+                kb = back_vip_prac_ikb(lang)
+                await send_check_vip_part2(amount_slots, callback, state, kb, callback_data, lang)
+            elif data[10] == 'event':
+                amount_slots = await get_amount_events(data[9])
+                kb = back_pro_main(lang)
+                await send_check_vip_part2(amount_slots, callback, state, kb, callback_data, lang)
+            elif data[10] == 'vip_slot':
+                amount_slots = await get_amount_vip_slot_time(data[9], data[17])
+                kb = back_vip_slot_main_ikb(lang)
+                await send_check_vip_part2(amount_slots, callback, state, kb, callback_data, lang)
+
+async def send_check_vip_part2(amount_slots, callback, state, kb, callback_data, lang):
+    if amount_slots == 0:
+        await callback.message.answer(f"{_('К сожалению слотов больше не осталось!', lang)}\n"
+                                      f"\n"
+                                      f"{_('Если вы уже совершили оплату, выберите другое мероприятие такой же стоимости и отправьте туда чек или же обратитесь в 💬Подержку за возвратом денежных средств!🤗', lang)}",
+                                      reply_markup=kb)
+    else:
         async with state.proxy() as data:
             data['check_id'] = callback_data['id']
         await callback.message.answer(_("Отправьте чек:", lang),
                                       reply_markup=cancel_kb(lang))
         await BuyVipSlotStatesGroup.proof.set()
-    await callback.message.delete()
-    await callback.answer()
 
 
 @dp.callback_query_handler(tour_cb.filter(action='confirm_buy_vip_slot'))
@@ -64,19 +65,29 @@ async def cb_confirm_buy_vip_slot(callback : types.CallbackQuery, callback_data 
     await callback.message.answer(_("Ожидайте подтверждения платежа!", lang),
                                   reply_markup=ReplyKeyboardRemove())
     check = await get_check_vip_slot(callback_data['id'])
+    await set_new_click(callback.from_user.id)
     for data in check:
         if data[10] == "event":
             tour_name = await get_event_name(data[9])
             desc_tour = await get_desc_event(data[9])
             price = await get_price_event(data[9])
+            amount_slots = await get_amount_events(data[9])
+            remaining_slots = amount_slots - 1
+            await update_amount_event(data[9], remaining_slots)
         elif data[10] == 'prac':
             tour_name = await get_vip_prac_name(data[9])
             desc_tour = await get_desc_prac_vip(data[9])
             price = await get_price_vip_prac(data[9])
+            amount_slots = await get_amount_vip_prac(data[9])
+            remaining_slots = amount_slots - 1
+            await update_amount_vip_prac(data[9], remaining_slots)
         else:
             tour_name = await get_name_tour_vip_slot(data[9])
             desc_tour = await get_desc_vip_slot(data[9])
             price = await get_price_vip_slot(data[9])
+            amount_slots = await get_amount_vip_slot_time(data[9], data[17])
+            remaining_slots = amount_slots - 1
+            await update_amount_vip_slot(data[9], data[17], remaining_slots)
         if not data[3]:
             await bot.send_document(chat_id=admin_pay_slot,
                                     document=data[4],
@@ -121,6 +132,7 @@ async def cb_confirm_buy_vip_slot(callback : types.CallbackQuery, callback_data 
 async def cb_send_info_for_vip_slot(callback : types.CallbackQuery, callback_data : dict, state : FSMContext):
     lang = await get_user_lang(callback.from_user.id)
     await callback.message.answer(_("Отправьте название команды:", lang))
+    await set_new_click(callback.from_user.id)
     async with state.proxy() as data:
         data['check_id'] = callback_data['id']
     await BuyVipSlotStatesGroup.team_name.set()
@@ -131,6 +143,7 @@ async def cb_send_info_for_vip_slot(callback : types.CallbackQuery, callback_dat
 @dp.callback_query_handler(tour_cb.filter(action='change_info_vip_slot'))
 async def cb_change_info_vip_slot(callback : types.CallbackQuery, callback_data : dict, state : FSMContext):
     lang = await get_user_lang(callback.from_user.id)
+    await set_new_click(callback.from_user.id)
     await callback.message.answer(_("Отправьте название команды:", lang))
     async with state.proxy() as data:
         data['check_id'] = callback_data['id']
@@ -145,6 +158,7 @@ async def cb_confirm_info_vip_slot(callback : types.CallbackQuery, callback_data
     lang = await get_user_lang(callback.from_user.id)
     check = await get_check_vip_slot(callback_data['id'])
     profile = await get_profile(callback.from_user.id)
+    await set_new_click(callback.from_user.id)
     if profile == 'pro':
         await callback.message.answer(f"{_('Благодарим за покупку!', lang)}\n"
                                       f"{_('Слот выдается в течение 20 минут(если покупка совершена за час до начала, слот будет выдан моментально).', lang)}",
@@ -214,6 +228,7 @@ async def load_proof_vip_slot(message: types.Message, state: FSMContext):
     lang = await get_user_lang(message.from_user.id)
     profile = await get_profile(message.from_user.id)
     if message.text == f'❌{_("Отменить", lang)}':
+        await set_new_click(message.from_user.id)
         if profile == 'young':
             await message.answer(_("Вы вернулись в главное меню:", lang),
                                  reply_markup=main_young_menu_ikb(lang))

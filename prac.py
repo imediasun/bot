@@ -1,6 +1,6 @@
 from aiogram import types
 
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp
 from database import *
 from keyboards import *
@@ -13,6 +13,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(message.from_user.id)
     if not ban:
         index = 0
         prac = await get_prac()
@@ -48,6 +49,7 @@ async def back_tour_main(callback: types.CallbackQuery):
     ban = await cb_check_ban_user(callback)
     if not ban:
         if callback.data == 'next_prac':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             prac = await get_prac()
             all_prac = list(prac)[index: index + 3]
@@ -70,6 +72,7 @@ async def back_tour_main(callback: types.CallbackQuery):
                                               reply_markup=next_prac(lang))
             await callback.answer()
         elif callback.data == 'back_young_main':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             await callback.message.answer(_("Вы вернулись в главное меню:", lang),
                                           reply_markup=main_young_menu_ikb(lang))

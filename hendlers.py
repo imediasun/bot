@@ -10,10 +10,12 @@ from youngkb import main_young_menu_ikb
 from states import *
 from translations import _
 
+
 @dp.message_handler(commands=['start'])
 async def cd_start(message: types.Message):
     user_id = message.from_user.id
     ban = await check_ban_user(message)
+    await insert_time_log(user_id)
     if not ban:
         await message.answer("Привет!\n"
                              "Выбери язык👇\n"
@@ -79,6 +81,7 @@ async def check_profile(message: types.Message):
 async def load_profile(message: types.Message, state: FSMContext):
     global profile_code
     lang = await get_user_lang(message.from_user.id)
+    await set_new_click(message.from_user.id)
     if message.text == '👨PRO player':
         profile_code = 'pro'
         await message.answer(f"{_('Ваш', lang)} ID: {message.chat.id}\n"
@@ -95,7 +98,6 @@ async def load_profile(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-
 @dp.message_handler(commands=['getchatid'])
 async def cd_get_chat_id(message: types.Message):
     await message.answer(f"ID данного чата: {message.chat.id}")
@@ -103,14 +105,15 @@ async def cd_get_chat_id(message: types.Message):
 
 # CheckUser
 @dp.message_handler(commands=['checkuser'])
-async def cd_check_user(message : types.Message):
+async def cd_check_user(message: types.Message):
     await message.answer("Отправьте ID юзера:")
     await CheckUserStatesGroup.user_id.set()
 
 
-@dp.message_handler(lambda message : not message.text.isdigit(), state=CheckUserStatesGroup.user_id)
-async def check_load_user_id(message : types.Message):
+@dp.message_handler(lambda message: not message.text.isdigit(), state=CheckUserStatesGroup.user_id)
+async def check_load_user_id(message: types.Message):
     await message.answer("Введите ID!")
+
 
 @dp.message_handler(state=CheckUserStatesGroup.user_id)
 async def load_check_user_id(message: types.Message, state: FSMContext):
@@ -129,6 +132,7 @@ async def cd_player(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(message.from_user.id)
     if not ban:
         await message.answer(f"{_('Ваш', lang)} ID: {message.from_user.id}\n"
                              f"{_('Что вас интересует', lang)}?",
@@ -141,15 +145,18 @@ async def cd_pro_player(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(message.from_user.id)
     if not ban:
         await message.answer(f"{_('Твой', lang)} ID: {message.chat.id}\n"
                              f"{_('Что вас интересует', lang)}?",
                              reply_markup=main_menu_kb(lang))
         await update_profile("pro", message.from_user.id)
 
+
 @dp.message_handler(commands=['finish'], state='*')
-async def cd_finish(message : types.Message, state : FSMContext):
+async def cd_finish(message: types.Message, state: FSMContext):
     lang = await get_user_lang(message.from_user.id)
+    await set_new_click(message.from_user.id)
     await message.answer(f"{_('Пожалуйста, выберите тип аккаунта', lang)}:\n"
                          f"👶Young player - {_('используйте команду', lang)} /player\n"
                          f"👨PRO player - {_('используйте команду', lang)} /proplayer")
@@ -157,12 +164,13 @@ async def cd_finish(message : types.Message, state : FSMContext):
 
 
 # NEWS
-@dp.message_handler(lambda message : message.text == "🔥NEWS")
+@dp.message_handler(lambda message: message.text == "🔥NEWS")
 async def news_text(message: types.Message):
     global index
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(message.from_user.id)
     if not ban:
         all_news = await get_all_news()
         profile = await get_profile(message.from_user.id)
@@ -187,6 +195,7 @@ async def news_text(message: types.Message):
                 await message.answer(_("Наши телеграм каналы с актуальными новостями:", lang),
                                      reply_markup=news_kb)
 
+
 def is_valid_url(text):
     parsed = urlparse(text)
     return bool(parsed.scheme and parsed.netloc)
@@ -205,6 +214,7 @@ async def check_ban_user(message):
                              f"{_('Ваш', lang)} ID: {message.from_user.id}")
         return True
 
+
 async def cb_check_ban_user(callback):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
@@ -218,3 +228,12 @@ async def cb_check_ban_user(callback):
                                       f"{_('Ваш', lang)} ID: {user_id}")
         await callback.answer()
         return True
+
+
+async def set_new_click(user_id):
+    amount_click = await get_amount_click(user_id)
+    if not amount_click:
+        await update_click(1, user_id)
+    else:
+        new_amount_click = amount_click + 1
+        await update_click(new_amount_click, user_id)

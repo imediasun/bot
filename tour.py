@@ -1,6 +1,6 @@
 from aiogram import types
 
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp
 from database import *
 from keyboards import *
@@ -15,6 +15,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(user_id)
     if not ban:
         if message.text == '📋Tournament':
             await message.answer(_("Выберите формат турнира:", lang),
@@ -25,6 +26,7 @@ async def all_text(message: types.Message):
 async def back_tour_main(callback: types.CallbackQuery):
     lang = await get_user_lang(callback.from_user.id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         await callback.message.answer(_("Вы в TOURNAMENT меню:", lang),
                                       reply_markup=tour_main_ikb(lang))
@@ -39,6 +41,7 @@ async def cb_tour(callback: types.CallbackQuery):
     tour_format = callback.data.split('_')[1]
     tour = await get_tours(tour_format)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         if not tour:
             await callback.message.answer(_("На данный момент турниров нету!", lang),
@@ -71,6 +74,7 @@ async def cb_next_tour(callback: types.CallbackQuery, callback_data: dict):
     global index
     lang = await get_user_lang(callback.from_user.id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         tour = await get_tours(callback_data['id'])
         full_tour = list(tour)[index: index + 2]

@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from config import before_post_chat
-from hendlers import cb_check_ban_user, check_ban_user, is_valid_url
+from hendlers import cb_check_ban_user, check_ban_user, is_valid_url, set_new_click
 from main import dp, bot
 
 from database import *
@@ -18,6 +18,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(user_id)
     if not ban:
         await message.answer(_("Выберите действие:", lang),
                              reply_markup=prac_agent_main_ikb(lang))
@@ -34,6 +35,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
     ban = await cb_check_ban_user(callback)
     if not ban:
         if callback.data == 'add_agent_prac':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             agent = await get_prac_agent_profile(user_id)
             if not agent:
@@ -46,6 +48,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
                                               reply_markup=finish_prac_agent_ikb(lang))
             await callback.answer()
         elif callback.data == 'yes_prac_agent':
+            await set_new_click(callback.from_user.id)
             await callback.message.answer(_("Ваша анкета опубликована!", lang),
                                           reply_markup=send_prac_agent_ikb(lang))
             agent = await get_prac_agent_profile(user_id)
@@ -68,6 +71,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'change_prac_agent':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             nick = await get_nickname_prac_agent(user_id)
             await callback.message.answer(_("Укажите свой ник:", lang),
@@ -75,6 +79,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await PracAgentStateGroup.new_nickname.set()
             await callback.answer()
         elif callback.data == 'delete_prac_agent':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             await delete_prac_agent_profile(user_id)
             await callback.message.answer(_("Анкета успешно удалена!", lang),
@@ -82,6 +87,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.answer()
         elif callback.data == 'search_prac_agent':
             index = 0
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             agent = await get_all_prac_agent()
             if not agent:
@@ -100,6 +106,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
                                                   reply_markup=next_prac_agent(lang))
             await callback.answer()
         elif callback.data == 'next_prac_agent':
+            await set_new_click(callback.from_user.id)
             await callback.message.delete()
             agent = await get_all_prac_agent()
             all_agent = list(agent)[index: index + 2]
@@ -126,6 +133,7 @@ async def check_prac_nickname(message: types.Message):
 async def load_prac_nick(message: types.Message, state: FSMContext):
     lang = await get_user_lang(message.from_user.id)
     if message.text == f'❌{_("Отменить", lang)}':
+        await set_new_click(message.from_user.id)
         await message.answer("Вы вернулись в главное меню:",
                              reply_markup=main_young_menu_ikb(lang))
         await state.finish()

@@ -4,7 +4,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from config import active_uc_id, admin_pay_uc, admin_get_uc, ceo
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp, bot
 
 from database import *
@@ -21,6 +21,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(user_id)
     if not ban:
         # await message.answer("Актуальные UC packs:",
         #                      reply_markup=ReplyKeyboardRemove())
@@ -76,6 +77,7 @@ async def cb_get_uc_pack(callback : types.CallbackQuery, callback_data : dict):
     currency = await get_region_currency(lang)
     amount_curr = await get_amount_curr(currency)
     ikb = InlineKeyboardMarkup()
+    await set_new_click(callback.from_user.id)
     for data in uc_pack:
         amount = float(data[3]) * float(amount_curr)
         btn1 = InlineKeyboardButton(text=f"💸{round(amount, 0)} {currency}",
@@ -92,6 +94,7 @@ async def cb_buy_uc(callback: types.CallbackQuery, callback_data: dict):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         payments = await get_payment()
         ikb = InlineKeyboardMarkup(row_width=1)
@@ -115,6 +118,7 @@ async def cb_back_buy_uc(callback : types.CallbackQuery):
     amount_curr = await get_amount_curr(currency)
     info_uc = await get_all_info_uc_active(active_uc_id)
     ikb = InlineKeyboardMarkup()
+    await set_new_click(callback.from_user.id)
     for data in uc_pack:
         if currency == "USD":
             amount = round(float(data[3]) * float(amount_curr), 2)
@@ -146,6 +150,7 @@ async def cb_back_payment(callback: types.CallbackQuery, callback_data: dict):
     lang = await get_user_lang(callback.from_user.id)
     payments = await get_payment()
     ikb = InlineKeyboardMarkup(row_width=1)
+    await set_new_click(callback.from_user.id)
     for data in payments:
         btn1 = InlineKeyboardButton(f'{data[2]}', callback_data=f"uc_{data[0]}_{callback_data['id']}")
         ikb.add(btn1)
@@ -159,6 +164,7 @@ async def cb_back_payment(callback: types.CallbackQuery, callback_data: dict):
 
 @dp.callback_query_handler(lambda c: c.data.startswith('uc_'))
 async def cb_card_for_pay(callback: types.CallbackQuery):
+    await set_new_click(callback.from_user.id)
     ids = callback.data.split('_')
     card_id = ids[1]
     uc_id = ids[2]
@@ -200,6 +206,7 @@ async def cb_send_check_uc(callback: types.CallbackQuery, callback_data: dict, s
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(user_id)
     if not ban:
         async with state.proxy() as data:
             data['uc_id'] = callback_data['id']
@@ -214,6 +221,7 @@ async def cb_confirm_pay_uc(callback: types.CallbackQuery, callback_data: dict):
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(callback.from_user.id)
     if not ban:
         await callback.message.answer(_("Ожидайте подтверждения платежа!", lang),
                                       reply_markup=ReplyKeyboardRemove())
@@ -252,6 +260,7 @@ async def cb_change_check_uc(callback: types.CallbackQuery, callback_data: dict,
     user_id = callback.from_user.id
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
+    await set_new_click(user_id)
     if not ban:
         async with state.proxy() as data:
             data['uc_id'] = callback_data['id']
@@ -266,6 +275,7 @@ async def cb_confirm_info_uc(callback: types.CallbackQuery, callback_data: dict)
     lang = await get_user_lang(callback.from_user.id)
     check = await get_check_uc(callback_data['id'])
     profile = await get_profile(callback.from_user.id)
+    await set_new_click(callback.from_user.id)
     if profile == 'young':
         await callback.message.answer(f"{_('Благодарим за покупку!', lang)}\n"
                                       f"{_('UC поступят Вам на счет в течении 20 минут', lang)}",
@@ -292,6 +302,7 @@ async def cb_confirm_info_uc(callback: types.CallbackQuery, callback_data: dict)
 @dp.callback_query_handler(tour_cb.filter(action='change_pay_info_uc'))
 async def cb_change_pay_info_uc(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
     lang = await get_user_lang(callback.from_user.id)
+    await set_new_click(callback.from_user.id)
     await callback.message.answer(_("Отправьте ваш игровой ID:", lang))
     await BuyUCStatesGroup.game_id.set()
     async with state.proxy() as data:
@@ -303,6 +314,7 @@ async def cb_change_pay_info_uc(callback: types.CallbackQuery, callback_data: di
 @dp.callback_query_handler(tour_cb.filter(action='send_info_for_uc'))
 async def cb_send_info_for_uc(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
     lang = await get_user_lang(callback.from_user.id)
+    await set_new_click(callback.from_user.id)
     await callback.message.answer(_("Отправьте ваш игровой ID:", lang))
     async with state.proxy() as data:
         data['uc_id'] = callback_data['id']

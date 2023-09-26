@@ -309,3 +309,9 @@ class AddPracVIPStatesGroup(StatesGroup):
 # CHECK USER
 class CheckUserStatesGroup(StatesGroup):
     user_id = State()
+
+
+# STATISTIC
+class GetRandomUserStatesGroup(StatesGroup):
+
+    amount = State()

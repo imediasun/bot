@@ -621,10 +621,19 @@ def admin_vip_menu_kb() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
     btn1 = KeyboardButton('Добавить слот')
     btn2 = KeyboardButton('Просмотреть все слоты')
+    btn3 = KeyboardButton("Удалить все слоты")
     back = KeyboardButton('🔙Вернутся в меню админа')
-    kb.add(btn1,btn2, back)
+    kb.add(btn1,btn2, btn3, back)
 
     return kb
+
+def admin_delete_all_vs_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup()
+    btn1 = InlineKeyboardButton('✅', callback_data='delete_all_vip_slot')
+    btn2 = InlineKeyboardButton('❌', callback_data='no_delete_all_vip_slot')
+    ikb.add(btn1, btn2)
+
+    return ikb
 
 def admin_chek_vip_kb() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardMarkup(resize_keyboard=True)
@@ -640,10 +649,10 @@ def admin_chek_vip_kb() -> ReplyKeyboardMarkup:
 
 def set_time_vip_slot_kb() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    btn1 = InlineKeyboardButton('15:00')
-    btn2 = InlineKeyboardButton('18:00')
-    btn3 = InlineKeyboardButton('21:00')
-    btn4 = InlineKeyboardButton('18:00/21:00')
+    btn1 = InlineKeyboardButton('15')
+    btn2 = InlineKeyboardButton('18')
+    btn3 = InlineKeyboardButton('21')
+    btn4 = InlineKeyboardButton('18/21')
     kb.add(btn1, btn2, btn3, btn4)
 
     return kb
@@ -826,19 +835,72 @@ def general_admin_kb() -> ReplyKeyboardMarkup:
 
     return kb
 
+
+def admin_statistic_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Общая статистика", callback_data="all_statistic")
+    btn2 = InlineKeyboardButton("Click user", callback_data="user_click_stat")
+    btn3 = InlineKeyboardButton("UC SHOP", callback_data="admin_uc_shop_stat")
+    btn4 = InlineKeyboardButton("Free agent", callback_data="free_agent_stat")
+    btn5 = InlineKeyboardButton("Free team", callback_data="free_team_stat")
+    btn6 = InlineKeyboardButton("Free young agent", callback_data="young_free_agent_stat")
+    btn7 = InlineKeyboardButton("Free young team", callback_data="young_free_team_stat")
+    close = InlineKeyboardButton("❌Закрыть", callback_data="statistic_count")
+    ikb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, close)
+
+    return ikb
+
+def admin_all_click_stat_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Ввести число", callback_data="get_random_clickers")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, back)
+
+    return ikb
+
+def admin_free_agent_stat_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Ввести число", callback_data="get_random_fa")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, back)
+
+    return ikb
+
+
+def admin_free_team_stat_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Ввести число", callback_data="get_random_ft")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, back)
+
+    return ikb
+
+
+def admin_young_fa_stat_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Ввести число", callback_data="get_random_youngfa")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, back)
+
+    return ikb
+
+
+def admin_young_ft_stat_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("Ввести число", callback_data="get_random_youngft")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, back)
+
+    return ikb
+
+def admin_back_stat_menu_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup()
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(back)
+
+    return ikb
+
 # AMOUNT USERS
-# def statistic_ikb(all_users, active_users, no_active_users, free_teams, free_agents, free_teams_p, free_agents_p) -> InlineKeyboardMarkup:
-#     ikb = InlineKeyboardMarkup(row_width=1)
-#     btn1 = InlineKeyboardButton(f"Количество пользователей: {all_users}", callback_data="statistic_count")
-#     btn2 = InlineKeyboardButton(f"Активные: {active_users}", callback_data="statistic_count")
-#     btn3 = InlineKeyboardButton(f"Не активыне: {no_active_users}", callback_data="statistic_count")
-#     btn4 = InlineKeyboardButton(f"FREE TEAMS: {free_teams}", callback_data="statistic_count")
-#     btn5 = InlineKeyboardButton(f"FREE PLAYERS: {free_agents}", callback_data="statistic_count")
-#     btn6 = InlineKeyboardButton(f"FREE TEAMS P: {free_teams_p}", callback_data="statistic_count")
-#     btn7 = InlineKeyboardButton(f"FREE PLAYERS P: {free_agents_p}", callback_data="statistic_count")
-#     ikb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7)
-#
-#     return ikb
 
 def statistic_ikb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=1)

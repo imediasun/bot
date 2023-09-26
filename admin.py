@@ -4,13 +4,13 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from main import dp, bot
-from config.config import *
+from config import *
 from hendlers import check_ban_user, cb_check_ban_user, is_valid_url
 
 from database import *
 from keyboards import *
 from youngkb import *
-from states import AddadminStatesGroup, AdminSendMessagesStatesGroup, AddNewsStatesGroup
+from states import AddadminStatesGroup, AdminSendMessagesStatesGroup, AddNewsStatesGroup, GetRandomUserStatesGroup
 
 
 
@@ -20,12 +20,12 @@ async def cd_admin(message: types.Message):
     admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in admin_id:
+        if user_id in admin_id or user_id in ceo:
             await message.answer("Выберите действие:",
                                  reply_markup=general_admin_kb())
-        elif user_id in ceo:
-            await message.answer("Выберите действие:",
-                                 reply_markup=general_admin_kb())
+        # elif user_id in ceo:
+        #     await message.answer("Выберите действие:",
+        #                          reply_markup=general_admin_kb())
 
 
 @dp.message_handler(commands=['moderator'])
@@ -54,11 +54,7 @@ async def all_text(message: types.Message):
     moder_id = await get_moder_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in ceo:
-            if message.text == '🤴ADD ADMIN':
-                await message.answer("Выберите действие",
-                                     reply_markup=add_admin_kb())
-        elif user_id in admin_id:
+        if user_id in admin_id or user_id in ceo:
             if message.text == '🤴ADD ADMIN':
                 await message.answer("Выберите действие",
                                      reply_markup=add_admin_kb())
@@ -66,51 +62,25 @@ async def all_text(message: types.Message):
                 await message.answer("Выберите действие:",
                                      reply_markup=admin_news_ikb())
             elif message.text == '📊Статистика':
-                all_users = await get_amount_all_users()
-                all_free_teams = await get_amount_free_teams()
-                all_free_agents = await get_amount_free_agents()
-                all_free_teams_p = await get_amount_free_teams_p()
-                all_free_agents_p = await get_amount_free_agents_p()
-                await message.answer(f"Актуальная статистика:\n"
-                                     f"\n"
-                                     f"Количество пользователей: {all_users}\n"
-                                     f"Активные: -\n"
-                                     f"Не активные: -\n"
-                                     f"\n"
-                                     f"PRO PLAYER\n"
-                                     f"FREE TEAMS: {all_free_teams}\n"
-                                     f"FREE AGENTS: {all_free_agents}\n"
-                                     f"\n"
-                                     f"YOUNG PLAYER\n"
-                                     f"FREE TEAMS: {all_free_teams_p}\n"
-                                     f"FREE AGENTS: {all_free_agents_p}",
-                                     reply_markup=statistic_ikb())
+                await message.answer("Выберите действия:",
+                                     reply_markup=admin_statistic_ikb())
             elif message.text == '⬆️Сделать рассылку':
                 await message.answer("Отправьте фото:",
                                      reply_markup=admin_send_mess())
                 await AdminSendMessagesStatesGroup.photo.set()
             elif message.text == '◀️YOUNG':
-                if message.from_user.id in admin_id:
-                    await message.answer("Вы вернулись в YOUNG меню",
-                                         reply_markup=main_young_menu_ikb(lang))
-
+                await message.answer("Вы вернулись в YOUNG меню",
+                                     reply_markup=main_young_menu_ikb(lang))
             elif message.text == 'PRO▶️':
-                if message.from_user.id in admin_id:
-                    await message.answer("Вы вернулись в PRO меню",
-                                         reply_markup=main_menu_kb(lang))
+                await message.answer("Вы вернулись в PRO меню",
+                                     reply_markup=main_menu_kb(lang))
         elif user_id in moder_id:
-            # ADMIN OTHER
             if message.text == '◀️YOUNG':
-                if message.from_user.id in admin_id:
-                    await message.answer("Вы вернулись в YOUNG меню",
-                                         reply_markup=main_young_menu_ikb(lang))
-
+                await message.answer("Вы вернулись в YOUNG меню",
+                                     reply_markup=main_young_menu_ikb(lang))
             elif message.text == 'PRO▶️':
-                if message.from_user.id in admin_id:
-                    await message.answer("Вы вернулись в PRO меню",
-                                         reply_markup=main_menu_kb(lang))
-
-
+                await message.answer("Вы вернулись в PRO меню",
+                                     reply_markup=main_menu_kb(lang))
 
 
 # ADMIN SEND MESS
@@ -179,21 +149,29 @@ async def cb_edit_send_mess(callback : types.CallbackQuery, callback_data : dict
     await callback.message.delete()
     await callback.answer()
 
+# STATISTIC
+@dp.callback_query_handler(lambda callback : callback.data.startswith("get_random_"))
+async def admin_get_random_user(callback : types.CallbackQuery, state : FSMContext):
+    where = callback.data.split("_")[2]
+    await callback.message.answer("Введите количество юзеров:")
+    async with state.proxy() as data:
+        data['where'] = where
+    await GetRandomUserStatesGroup.amount.set()
+    await callback.message.delete()
+    await callback.answer()
+
 
 
 # ADD ADMIN
-cb_words_list = ["add_admin", "check_admin_list", "back_general_admin", "statistic_count"]
+cb_words_list = ["add_admin", "check_admin_list", "back_general_admin", "statistic_count", "all_statistic",
+                 "user_click_stat", "free_agent_stat", "free_team_stat", "young_free_agent_stat", "young_free_team_stat",
+                 "back_stat_menu"]
 
 @dp.callback_query_handler(lambda callback : callback.data in cb_words_list)
 async def all_callbacks(callback : types.CallbackQuery):
     user_id = callback.from_user.id
     admin_id = await get_admin_id(user_id)
-    if user_id in ceo:
-        if callback.data == 'add_admin':
-            await callback.message.answer("Отправьте ID для выдачи админа:")
-            await AddadminStatesGroup.admin_id.set()
-            await callback.answer()
-    elif user_id in admin_id:
+    if user_id in admin_id or user_id in ceo:
         if callback.data == 'add_admin':
             await callback.message.answer("Отправьте ID для выдачи админа:")
             await AddadminStatesGroup.admin_id.set()
@@ -218,6 +196,82 @@ async def all_callbacks(callback : types.CallbackQuery):
             await callback.answer()
 
         # ADMIN STATISTIC
+        elif callback.data == 'all_statistic':
+            all_users = await get_amount_all_users()
+            statistic_log = await get_time_log()
+            day_log = statistic_log[3]
+            week_log = statistic_log[2]
+            month_log = statistic_log[1]
+            year_log = statistic_log[0]
+            await callback.message.answer(f"Актуальная статистика\n"
+                                          f"\n"
+                                          f"Количество пользователей: {all_users}\n"
+                                          f"Активные: -\n"
+                                          f"Не активные: -\n"
+                                          f"\n"
+                                          f"Новых пользователей за:\n"
+                                          f"День: {day_log}\n"
+                                          f"Неделю: {week_log}\n"
+                                          f"Месяц: {month_log}\n"
+                                          f"Год: {year_log}",
+                                          reply_markup=admin_back_stat_menu_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "user_click_stat":
+            all_clicks = await get_sum_click_users()
+            await callback.message.answer(f"Статистика по количеству кликов юзеров\n"
+                                          f"\n"
+                                          f"Общее количество кликов: {all_clicks}\n"
+                                          f"\n"
+                                          f"Топ по количеству кликов:",
+                                          reply_markup=admin_all_click_stat_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "free_agent_stat":
+            all_free_agents = await get_amount_free_agents()
+            await callback.message.answer(f"Статистика по FREE AGENTS\n"
+                                          f"\n"
+                                          f"Количество анкет: {all_free_agents}\n"
+                                          f"\n"
+                                          f"Выбрать рандомно:",
+                                          reply_markup=admin_free_agent_stat_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "free_team_stat":
+            all_free_teams = await get_amount_free_teams()
+            await callback.message.answer(f"Статистика по FREE TEAMS\n"
+                                          f"\n"
+                                          f"Количество анкет: {all_free_teams}\n"
+                                          f"\n"
+                                          f"Выбрать рандомно:",
+                                          reply_markup=admin_free_team_stat_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "young_free_agent_stat":
+            all_free_teams_p = await get_amount_free_agents_p()
+            await callback.message.answer(f"Статистика по YOUNG FREE AGENTS\n"
+                                          f"\n"
+                                          f"Количество анкет: {all_free_teams_p}\n"
+                                          f"\n"
+                                          f"Выбрать рандомно:",
+                                          reply_markup=admin_young_fa_stat_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "young_free_team_stat":
+            all_free_agents_p = await get_amount_free_teams_p()
+            await callback.message.answer(f"Статистика по YOUNG FREE TEAMS\n"
+                                          f"\n"
+                                          f"Количество анкет: {all_free_agents_p}\n"
+                                          f"\n"
+                                          f"Выбрать рандомно:",
+                                          reply_markup=admin_young_ft_stat_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "back_stat_menu":
+            await callback.message.answer("Выберите действия:",
+                                          reply_markup=admin_statistic_ikb())
+            await callback.message.delete()
+            await callback.answer()
         elif callback.data == 'statistic_count':
             await callback.message.delete()
             await callback.answer()
@@ -275,7 +329,7 @@ async def cb_edit_admin(callback: types.CallbackQuery, callback_data: dict, stat
     if not ban:
         admin_id = await get_admin_id(callback_data['id'])
         await callback.message.answer("Отправьте ID для выдачи админа:",
-                                      reply_markup=info_from_bd(admin_id))
+                                      reply_markup=info_from_bd(admin_id[0]))
         await AddadminStatesGroup.new_admin_id.set()
         async with state.proxy() as data:
             data['a_id'] = callback_data['id']
@@ -446,7 +500,7 @@ async def load_new_type_admin(message: types.Message, state: FSMContext):
     elif message.text == 'Moderator':
         async with state.proxy() as data:
             data['type'] = 'Moderator'
-        user = await bot.get_chat(data['admin_id'])
+        user = await bot.get_chat(data['a_id'])
         username = user.username
         if not username:
             await message.answer("Отправьте username админа:",
@@ -615,4 +669,65 @@ async def load_link_send_mess(message : types.Message, state : FSMContext):
                                            f"{data['link']}")
     await message.answer("Все верно?",
                          reply_markup=conf_add_send_mess_ikb(post_id))
+    await state.finish()
+
+
+# STATISTIC
+@dp.message_handler(lambda message : not message.text.isdigit(), state=GetRandomUserStatesGroup.amount)
+async def check_random_user(message : types.Message):
+    await message.answer("Введите число!")
+
+@dp.message_handler(state=GetRandomUserStatesGroup.amount)
+async def get_random_user(message : types.Message, state : FSMContext):
+    number = 1
+    async with state.proxy() as data:
+        data['amount'] = message.text
+    if data['where'] == "clickers":
+        click = await get_top_clickers(data['amount'])
+        for data in click:
+            try:
+                user_chat = await bot.get_chat(data[0])
+                await message.answer(f"#{number}\n"
+                                     f"\n"
+                                     f"Количество кликов: {data[7]}\n"
+                                     f"\n"
+                                     f"ID: {data[0]}\n"
+                                     f"username: @{user_chat.username}")
+                number +=1
+            except:
+                await message.answer(f"Чат #{number} не найден!")
+                number +=1
+    elif data['where'] == "fa":
+        agents = await get_random_users(data['amount'], "info_player")
+        for data in agents:
+            user_chat = await bot.get_chat(data[0])
+            await message.answer(f"#{number}\n"
+                                 f"\n"
+                                 f"ID: {data[0]}\n"
+                                 f"username: @{user_chat.username}")
+            number += 1
+    elif data['where'] == "ft":
+        agents = await get_random_users(data['amount'], "info_team")
+        for data in agents:
+            user_chat = await bot.get_chat(data[0])
+            await message.answer(f"#{number}\n"
+                                 f"\n"
+                                 f"ID: {data[0]}\n"
+                                 f"username: @{user_chat.username}")
+    elif data['where'] == "youngfa":
+        agents = await get_random_users(data['amount'], "young_player")
+        for data in agents:
+            user_chat = await bot.get_chat(data[0])
+            await message.answer(f"#{number}\n"
+                                 f"\n"
+                                 f"ID: {data[0]}\n"
+                                 f"username: @{user_chat.username}")
+    elif data['where'] == "youngft":
+        agents = await get_random_users(data['amount'], "young_team")
+        for data in agents:
+            user_chat = await bot.get_chat(data[0])
+            await message.answer(f"#{number}\n"
+                                 f"\n"
+                                 f"ID: {data[0]}\n"
+                                 f"username: @{user_chat.username}")
     await state.finish()

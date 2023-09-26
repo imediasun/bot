@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from config import before_post_chat
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp, bot
 
 from database import *
@@ -20,6 +20,7 @@ async def all_text(message: types.Message):
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
     ban = await check_ban_user(message)
+    await set_new_click(user_id)
     if not ban:
         await message.answer(_("Выберите действие:", lang),
                              reply_markup=free_team_main_ikb(lang))
@@ -36,6 +37,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
     ban = await cb_check_ban_user(callback)
     if not ban:
         if callback.data == 'add_team':
+            await set_new_click(callback.from_user.id)
             team = await get_team_profile(user_id)
             if not team:
                 await callback.message.answer(_("Укажите название вашей команды:", lang),
@@ -48,6 +50,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'search_team':
+            await set_new_click(callback.from_user.id)
             index = 0
             team = await select_team_profile()
             if not team:
@@ -67,6 +70,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'yes_free_team':
+            await set_new_click(callback.from_user.id)
             await callback.message.answer(_("Ваша анкета опубликована!", lang),
                                           reply_markup=send_team_profile_kb(lang))
             team = await get_team_profile(user_id)
@@ -92,6 +96,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'change_free_team':
+            await set_new_click(callback.from_user.id)
             team_name = await get_team_name(user_id=callback.message.chat.id)
             kb = ReplyKeyboardMarkup(resize_keyboard=True)
             btn1 = KeyboardButton(team_name)
@@ -102,12 +107,14 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'delete_free_team':
+            await set_new_click(callback.from_user.id)
             await delete_team_profile(callback.message.chat.id)
             await callback.message.answer(_("Анкета успешно удалена!", lang),
                                           reply_markup=back_free_team_main_ikb(lang))
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'next_team':
+            await set_new_click(callback.from_user.id)
             team = await select_team_profile()
             full_team = list(team)[index: index + 2]
             index += 2
@@ -121,6 +128,7 @@ async def all_free_agent_callbacks(callback: types.CallbackQuery):
             await callback.message.delete()
             await callback.answer()
         elif callback.data == 'back_team_main':
+            await set_new_click(callback.from_user.id)
             await callback.message.answer(_("Вы в FREE TEAM меню:", lang),
                                           reply_markup=free_team_main_ikb(lang))
             await callback.message.delete()
@@ -138,6 +146,7 @@ async def check_nickname(message: types.Message):
 async def load_team_name(message: types.Message, state: FSMContext):
     lang = await get_user_lang(message.from_user.id)
     if message.text == f'❌{_("Отменить", lang)}':
+        await set_new_click(message.from_user.id)
         await message.answer(_("Вы в FREE TEAM меню:", lang),
                              reply_markup=free_team_main_ikb(lang))
         await state.finish()

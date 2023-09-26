@@ -3,7 +3,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from config import admin_support_chat, ceo
-from hendlers import check_ban_user, cb_check_ban_user
+from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp, bot
 
 from database import *
@@ -20,6 +20,7 @@ async def all_text(message: types.Message):
     lang = await get_user_lang(message.from_user.id)
     ban = await check_ban_user(message)
     if not ban:
+        await set_new_click(message.from_user.id)
         await message.answer(f"{_('Здравствуйте, отправьте Ваш вопрос(можно прикрепить фото)', lang)}:\n"
                              f"{_('График работы: 8:00 - 00:00 MSK', lang)}",
                              reply_markup=info_from_bd(f"❌{_('Отменить', lang)}"))
@@ -36,11 +37,13 @@ async def all_callback(callback: types.CallbackQuery):
     lang = await get_user_lang(user_id)
     if not ban:
         if callback.data == 'ques':
+            await set_new_click(callback.from_user.id)
             await callback.message.answer(_("Отправьте ваш вопрос(можно прикрепить фото):", lang),
                                           reply_markup=cancel_kb(lang))
             await HelpStatesGroup.first_ques.set()
             await callback.answer()
         elif callback.data == 'back_main_menu':
+            await set_new_click(callback.from_user.id)
             await callback.message.answer(_("Вы вернулись в главное меню:", lang),
                                           reply_markup=main_menu_kb(lang))
             await callback.message.delete()
@@ -59,6 +62,7 @@ async def question1(message: types.Message, state: FSMContext):
         lang_name = await get_lang_name(message.from_user.id)
         mess_id_ques = message.message_id
         if message.text == f'❌{_("Отменить", lang)}':
+            await set_new_click(message.from_user.id)
             await open_supp_chat(message.from_user.id)
             profile = await get_profile(message.from_user.id)
             if profile == 'pro':
@@ -117,6 +121,7 @@ async def question2(message : types.Message, state : FSMContext):
         profile = await get_profile(chat_id_q)
         if message.text == f'❌{_("Отменить", lang)}':
             # await bot.delete_message(chat_id=admin_support_chat, message_id=mess_id_ques)
+            await set_new_click(message.from_user.id)
             await open_supp_chat(message.from_user.id)
             if profile == 'pro':
                 await message.answer(_("Вы вернулись в главное меню:", lang),
@@ -143,6 +148,7 @@ async def question2(message : types.Message, state : FSMContext):
                                        reply_markup=main_young_menu_ikb(lang))
             await state.finish()
         elif message.text == f'🔙{_("Главное меню", lang)}':
+            await set_new_click(message.from_user.id)
             await open_supp_chat(message.from_user.id)
             if profile == 'pro':
                 await message.answer(_("Вы вернулись в главное меню:", lang),
