@@ -22,7 +22,8 @@ async def cd_admin(message: types.Message):
     admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in admin_id:
+        if user_id in admin_id or user_id in ceo:
+            print(admin_id)
             if message.text == 'MUSIC':
                 await message.answer("Выберите действие:",
                                      reply_markup=admin_music_menu_kb())
@@ -111,33 +112,16 @@ async def edit_music(callback: types.CallbackQuery, state: FSMContext, callback_
 
 
 # MUSIC
-@dp.callback_query_handler(lambda c: c.data.startswith('get_music_'))
-async def get_music_for_user(callback: types.CallbackQuery):
-    global index
-    index = 0
-    music_id = callback.data.split('_')[-1]
-    await callback.message.answer("Ожидайте идет загрузка!")
-    music_file = await get_music_file(music_id)
-    bot = await callback.bot.me
-    await callback.message.answer_audio(audio=bytes(music_file),
-                                        caption=f"Скачано при помощи: @{bot.username}")
-
-
-@dp.callback_query_handler(lambda c: c.data.startswith('get_popular_music_'))
-async def get_popular_music_for_user(callback: types.CallbackQuery):
-    global index
-    index = 0
-    user_id = callback.from_user.id
-    admin_id = await get_admin_id(user_id)
-    ban = await cb_check_ban_user(callback)
-    if not ban:
-        if user_id in admin_id:
-            music = callback.data.split('_')[-1]
-            music_file = await get_music_file(music)
-            bot = await callback.bot.me
-            await callback.message.answer_audio(audio=music_file,
-                                                caption=f"@{bot.username}")
-    await callback.answer()
+# @dp.callback_query_handler(lambda c: c.data.startswith('get_music_'))
+# async def get_music_for_user(callback: types.CallbackQuery):
+#     global index
+#     index = 0
+#     music_id = callback.data.split('_')[-1]
+#     await callback.message.answer("Ожидайте идет загрузка!")
+#     music_file = await get_music_file(music_id)
+#     bot = await callback.bot.me
+#     await callback.message.answer_audio(audio=bytes(music_file),
+#                                         caption=f"Скачано при помощи: @{bot.username}")
 
 
 

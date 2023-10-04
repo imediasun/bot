@@ -19,9 +19,10 @@ async def all_text(message: types.Message):
     global index
     user_id = message.from_user.id
     moder_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if message.from_user.id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             if message.text == 'TOURNAMENT':
                 await message.answer("Выберите действие:",
                                      reply_markup=admin_tour_menu_kb())
@@ -215,7 +216,7 @@ async def check_tour_desc(message: types.Message):
 async def load_desc_tour(message: types.Message, state: FSMContext):
     if message.text == 'Пропустить':
         async with state.proxy() as data:
-            data['photo'] = ""
+            data['desc'] = ""
     else:
         async with state.proxy() as data:
             data['desc'] = message.text

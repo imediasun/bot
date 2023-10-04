@@ -20,9 +20,10 @@ async def all_text(message: types.Message):
     global index
     user_id = message.from_user.id
     moder_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if message.from_user.id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             if message.text == 'EVENT':
                 await message.answer("Выберите действие:",
                                      reply_markup=admin_menu_event_kb())

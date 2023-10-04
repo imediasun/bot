@@ -17,10 +17,11 @@ from states import AddPracStatesGroup
 async def all_text(message: types.Message):
     global index
     user_id = message.from_user.id
+    admin_id = await get_admin_id(user_id)
     moder_id = await get_moder_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if message.from_user.id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             await message.answer("Выберите действие:",
                                  reply_markup=admin_prac_game_kb())
 
@@ -31,12 +32,13 @@ words_list = ["add_prac", "check_all_pracs"]
 async def all_callbacks(callback : types.CallbackQuery):
     user_id = callback.from_user.id
     ban = await cb_check_ban_user(callback)
+    admin_id = await get_admin_id(user_id)
     moder_id = await get_moder_id(user_id)
     if not ban:
-        if user_id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             if callback.data == 'add_prac':
                 await callback.message.answer("Отправь баннер праков:",
-                                              reply_markup=admin_skip_kb())
+                                              reply_markup=skip_or_cancel_kb())
                 await AddPracStatesGroup.photo.set()
                 await callback.message.delete()
                 await callback.answer()
@@ -139,7 +141,9 @@ async def young_delete_prac(callback: types.CallbackQuery, callback_data: dict):
 
 
 
-@dp.message_handler(lambda message: not message.photo and not message.text == 'Пропустить',
+@dp.message_handler(lambda message: not message.photo
+                                    and not message.text == 'Пропустить'
+                                    and not message.text == '❌Отменить',
                     state=AddPracStatesGroup.photo)
 async def check_prac_photo(message: types.Message):
     await message.answer("Отправьте фото!")
@@ -147,16 +151,21 @@ async def check_prac_photo(message: types.Message):
 
 @dp.message_handler(content_types=['photo', 'text'], state=AddPracStatesGroup.photo)
 async def load_prac_photo(message: types.Message, state: FSMContext):
-    if message.text == 'Пропустить':
-        text = ""
-        async with state.proxy() as data:
-            data['photo'] = text
+    if message.text == "❌Отменить":
+        await message.answer("Вы вернулись в меню модератора:",
+                             reply_markup=admin_kb())
+        await state.finish()
     else:
-        async with state.proxy() as data:
-            data['photo'] = message.photo[0].file_id
-    await message.answer("Отправьте информацию о праке:",
-                         reply_markup=admin_skip_kb())
-    await AddPracStatesGroup.next()
+        if message.text == 'Пропустить':
+            text = ""
+            async with state.proxy() as data:
+                data['photo'] = text
+        else:
+            async with state.proxy() as data:
+                data['photo'] = message.photo[0].file_id
+        await message.answer("Отправьте информацию о праке:",
+                             reply_markup=admin_skip_kb())
+        await AddPracStatesGroup.next()
 
 
 @dp.message_handler(lambda message: len(message.text) > 300, state=AddPracStatesGroup.desc)

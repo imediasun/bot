@@ -62,6 +62,15 @@ def admin_skip_kb() -> ReplyKeyboardMarkup:
 
     return kb
 
+def skip_or_cancel_kb() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
+    btn1 = KeyboardButton("Пропустить")
+    btn2 = KeyboardButton("❌Отменить")
+    kb.add(btn1, btn2)
+
+    return kb
+
+
 
 def photo_kb(lang) -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardMarkup(resize_keyboard=True, row_width=1)
@@ -70,7 +79,6 @@ def photo_kb(lang) -> ReplyKeyboardMarkup:
     kb.add(btn1, btn2)
 
     return kb
-
 
 
 #FREE AGENT
@@ -838,13 +846,13 @@ def general_admin_kb() -> ReplyKeyboardMarkup:
 
 def admin_statistic_ikb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=1)
-    btn1 = InlineKeyboardButton("Общая статистика", callback_data="all_statistic")
+    btn1 = InlineKeyboardButton("All", callback_data="all_statistic")
     btn2 = InlineKeyboardButton("Click user", callback_data="user_click_stat")
-    btn3 = InlineKeyboardButton("UC SHOP", callback_data="admin_uc_shop_stat")
-    btn4 = InlineKeyboardButton("Free agent", callback_data="free_agent_stat")
-    btn5 = InlineKeyboardButton("Free team", callback_data="free_team_stat")
-    btn6 = InlineKeyboardButton("Free young agent", callback_data="young_free_agent_stat")
-    btn7 = InlineKeyboardButton("Free young team", callback_data="young_free_team_stat")
+    btn3 = InlineKeyboardButton("Free agent", callback_data="free_agent_stat")
+    btn4 = InlineKeyboardButton("Free team", callback_data="free_team_stat")
+    btn5 = InlineKeyboardButton("Free young agent", callback_data="young_free_agent_stat")
+    btn6 = InlineKeyboardButton("Free young team", callback_data="young_free_team_stat")
+    btn7 = InlineKeyboardButton("Payment", callback_data="payment_statistic")
     close = InlineKeyboardButton("❌Закрыть", callback_data="statistic_count")
     ikb.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, close)
 
@@ -900,8 +908,18 @@ def admin_back_stat_menu_ikb() -> InlineKeyboardMarkup:
 
     return ikb
 
-# AMOUNT USERS
+def payment_statistic_ikb() -> InlineKeyboardMarkup:
+    ikb = InlineKeyboardMarkup(row_width=1)
+    btn1 = InlineKeyboardButton("VIP SLOTS", callback_data=tour_cb.new("vip_slot", "stat_vip_slot"))
+    btn2 = InlineKeyboardButton("EVENTS", callback_data=tour_cb.new("event", "stat_vip_slot"))
+    btn3 = InlineKeyboardButton("VIP SLOTS prac", callback_data=tour_cb.new("prac", "stat_vip_slot"))
+    btn4 = InlineKeyboardButton("UC SHOP", callback_data="statistic_uc_shop")
+    back = InlineKeyboardButton("Назад", callback_data="back_stat_menu")
+    ikb.add(btn1, btn2, btn3, btn4, back)
 
+    return ikb
+
+# AMOUNT USERS
 def statistic_ikb() -> InlineKeyboardMarkup:
     ikb = InlineKeyboardMarkup(row_width=1)
     btn1 = InlineKeyboardButton("❌Закрыть", callback_data="statistic_count")

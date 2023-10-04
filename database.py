@@ -152,7 +152,9 @@ async def db_start():
                 "team_tag TEXT,"
                 "cap TEXT,"
                 "reason TEXT,"
-                "time TEXT)")
+                "time TEXT,"
+                "buy_time TEXT)")
+
     cur.execute("CREATE TABLE IF NOT EXISTS buy_uc("
                 "id TEXT PRIMARY KEY,"
                 "user_id INTEGER,"
@@ -166,7 +168,9 @@ async def db_start():
                 "user_name TEXT,"
                 "game_id TEXT,"
                 "nick TEXT,"
-                "reason TEXT)")
+                "reason TEXT,"
+                "buy_time TEXT)")
+
     cur.execute("CREATE TABLE IF NOT EXISTS news("
                 "news_id TEXT PRIMARY KEY,"
                 "user_id INTEGER,"
@@ -207,9 +211,11 @@ async def db_start():
 
 # LANGUAGE
 async def create_lang(user_id):
+    time_log = datetime.datetime.now()
     user = cur.execute("SELECT 1 FROM language WHERE user_id == '{key}'".format(key=user_id)).fetchone()
     if not user:
-        cur.execute("INSERT INTO language VALUES (?, ?, ?, ?, ?, ?, ?)", (user_id, '', '', 0, 0, 0, ''))
+        cur.execute("INSERT INTO language VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    (user_id, '', '', 0, 0, 0, '', 1, time_log))
     db.commit()
 
 
@@ -335,6 +341,88 @@ async def get_time_log():
     day = cur.execute("SELECT COUNT(DISTINCT time_log) FROM language WHERE strftime('%Y-%m-%d', time_log) = ?",
                        (str(f"{now_year}-{now_month:02}-{now_day:02}"),)).fetchone()[0]
     return [year, month, week, day]
+
+# STATISTIC BUY VIP SLOTS/EVENTS
+async def update_buy_time(tour_id):
+    time = datetime.datetime.now()
+    cur.execute("UPDATE buy_vip_slot SET buy_time = ? WHERE id = ?", (time, tour_id))
+    db.commit()
+
+async def get_all_payment_vip_slots():
+    return cur.execute("SELECT COUNT(DISTINCT team_name) FROM buy_vip_slot").fetchone()[0]
+
+async def get_payment_vip_slot(format):
+    return cur.execute("SELECT COUNT(DISTINCT team_name) FROM buy_vip_slot WHERE format = ?", (format,)).fetchone()[0]
+
+async def get_time_payment_vip_slot(format):
+    now_year = datetime.datetime.now().year
+    now_month = datetime.datetime.now().month
+    now_week = datetime.datetime.now().strftime("%W")
+    now_day = datetime.datetime.now().day
+
+    periods = [now_year, f"{now_year}-{now_month:02}", now_week, f"{now_year}-{now_month:02}-{now_day:02}"]
+    times = ["%Y", "%Y-%m", "%W", "%Y-%m-%d"]
+    counts = []
+
+    for period, time in zip(periods, times):
+        amount = cur.execute(f"SELECT COUNT(DISTINCT buy_time) FROM buy_vip_slot "
+                             f"WHERE strftime('{time}', buy_time) = '{period}'"
+                             "AND team_name IS NOT NULL AND format = ?",
+                             (format,)).fetchone()
+        if not amount:
+            amount = "Нету"
+        counts.append(amount[0])
+    for period, time in zip(periods, times):
+        peak_time = cur.execute(f"SELECT time FROM buy_vip_slot "
+                                f"WHERE strftime('{time}', buy_time) = '{period}' "
+                                f"AND format = ? AND team_name IS NOT NULL "
+                                f"GROUP BY time "
+                                f"ORDER BY COUNT(*) DESC "
+                                f"LIMIT 1",
+                                (format,)).fetchone()
+        if not peak_time:
+            peak_time = "Нету"
+        counts.append(peak_time[0])
+    return counts
+
+# STATISTIC UC SHOP
+async def update_buy_time_uc(uc_id):
+    time = datetime.datetime.now()
+    cur.execute("UPDATE buy_uc SET buy_time = ? WHERE id = ?", (time, uc_id))
+    db.commit()
+
+async def get_all_payment_uc_shop():
+    return cur.execute("SELECT COUNT(DISTINCT game_id) FROM buy_uc").fetchone()[0]
+
+async def get_time_payment_uc_shop():
+    now_year = datetime.datetime.now().year
+    now_month = datetime.datetime.now().month
+    now_week = datetime.datetime.now().strftime("%W")
+    now_day = datetime.datetime.now().day
+
+    periods = [now_year, f"{now_year}-{now_month:02}", now_week, f"{now_year}-{now_month:02}-{now_day:02}"]
+    times = ["%Y", "%Y-%m", "%W", "%Y-%m-%d"]
+    counts = []
+
+    for period, time in zip(periods, times):
+        amount = cur.execute(f"SELECT COUNT(DISTINCT buy_time) FROM buy_uc "
+                             f"WHERE strftime('{time}', buy_time) = '{period}' AND game_id IS NOT NULL").fetchone()
+        if not amount:
+            amount = "Нету"
+        counts.append(amount[0])
+    peak_time = cur.execute("SELECT strftime('%H:%M', buy_time) "
+                            "FROM buy_uc "
+                            "WHERE strftime('%Y-%m-%d', buy_time) = ? "
+                            "GROUP BY buy_time "
+                            "LIMIT 1", (now_day,)).fetchone()
+    print(peak_time)
+    # for period, time in zip(periods, times):
+    #     peak_time = cur.execute(f"SELECT strftime('{time}', buy_time) FROM buy_uc "
+    #                             f"WHERE strftime('{time}', buy_time) = '{period}'").fetchone()
+    #     if not peak_time:
+    #         peak_time = "Нету"
+    #     counts.append(peak_time[0])
+    return counts
 
 
 # ADMIN PAY
@@ -485,7 +573,7 @@ async def get_finals_team(user_id):
 async def create_tour(state, user_id, tour_id):
     async with state.proxy() as data:
         cur.execute("INSERT INTO info_tour (tour_id, user_id, format, photo, desc, url) VALUES(?, ?, ?, ?, ?, ?)",
-                    (tour_id, user_id, data['format'], data['photo'], data['desc'], data['url'],))
+                    (tour_id, user_id, data['format'], data['photo'], data['desc'], data['url']))
     db.commit()
 
 
@@ -539,16 +627,6 @@ async def create_vip_slots(state, user_id, tour_id, times, amounts):
         number +=1
     db.commit()
 
-
-# async def create_db_vip_slots(state, user_id, tour_id, stage, photo, desc, price, tour_name, link):
-#     async with state.proxy() as data:
-#         cur.execute(
-#             "INSERT INTO vip_slots (tour_id, user_id, stage, photo, desc, price, tour_name, ds_link, time, amount, amount2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-#             (
-#             tour_id, user_id, stage, photo, desc, price, tour_name, link, data['time'], data['amount'], data['amount']))
-#     db.commit()
-
-
 async def update_vip_slots(state, user_id, times, amounts):
     number = 0
     async with state.proxy() as data:
@@ -562,21 +640,6 @@ async def update_vip_slots(state, user_id, times, amounts):
                     (data['tour_id'], time, amounts[number], amounts[number]))
         number +=1
     db.commit()
-
-
-# async def update_amount_vip_slot(tour_id, amount):
-#     cur.execute("UPDATE vip_slots SET amount = ? WHERE tour_id = ?", (amount, tour_id))
-#     db.commit()
-#
-#
-# async def update_amount2_vip_slot(tour_id, amount):
-#     cur.execute("UPDATE vip_slots SET amount2 = ? WHERE tour_id = ?", (amount, tour_id))
-#     db.commit()
-
-
-# async def update_time_vip_slot(tour_id, time):
-#     cur.execute("UPDATE vip_slots SET time = ? WHERE tour_id = ?", (time, tour_id))
-#     db.commit()
 
 async def update_amount_vip_slot(tour_id, time, amount):
     cur.execute("UPDATE available_vip_slots SET amount_busy = ? WHERE tour_id = ? AND time = ?",
@@ -624,9 +687,6 @@ async def get_link_vip_slot(tour_id):
     return cur.execute("SELECT ds_link FROM vip_slots WHERE tour_id = ?", (tour_id,)).fetchone()[0]
 
 
-# async def get_time_vip_slot(tour_id):
-#     return cur.execute("SELECT time FROM available_vip_slots WHERE tour_id = ?", (tour_id,)).fetchone()[0]
-
 async def get_time_vip_slot_str(tour_id):
     tuple_time = cur.execute('SELECT time FROM available_vip_slots WHERE tour_id = ?', (tour_id,)).fetchall()
     list_time = [str(num[0]) for num in tuple_time]
@@ -656,15 +716,6 @@ async def get_amount2_vip_slot(tour_id):
 async def get_amount2_vip_slot_time(tour_id, time):
     return cur.execute("SELECT amount FROM available_vip_slots WHERE tour_id = ? AND time = ?",
                        (tour_id, time)).fetchone()[0]
-
-
-# async def get_amount_vip_slots(tour_id):
-#     return cur.execute("SELECT amount FROM vip_slots WHERE tour_id = ?", (tour_id,)).fetchone()[0]
-#
-#
-# async def get_amount2_vip_slots(tour_id):
-#     return cur.execute("SELECT amount2 FROM vip_slots WHERE tour_id = ?", (tour_id,)).fetchone()[0]
-
 
 async def get_photo_vip_slot(tour_id):
     return cur.execute("SELECT photo FROM vip_slots WHERE tour_id = ?", (tour_id,)).fetchone()[0]

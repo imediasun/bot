@@ -15,7 +15,6 @@ from translations import _
 async def cd_start(message: types.Message):
     user_id = message.from_user.id
     ban = await check_ban_user(message)
-    await insert_time_log(user_id)
     if not ban:
         await message.answer("Привет!\n"
                              "Выбери язык👇\n"

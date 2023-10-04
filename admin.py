@@ -23,18 +23,16 @@ async def cd_admin(message: types.Message):
         if user_id in admin_id or user_id in ceo:
             await message.answer("Выберите действие:",
                                  reply_markup=general_admin_kb())
-        # elif user_id in ceo:
-        #     await message.answer("Выберите действие:",
-        #                          reply_markup=general_admin_kb())
 
 
 @dp.message_handler(commands=['moderator'])
 async def cd_moderator(message: types.Message):
     user_id = message.from_user.id
     moder_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             await message.answer(text="Что вы хотите добавить?",
                                  reply_markup=admin_kb())
         elif user_id in ceo:
@@ -50,7 +48,7 @@ async def all_text(message: types.Message):
     global index
     user_id = message.from_user.id
     lang = await get_user_lang(user_id)
-    admin_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     moder_id = await get_moder_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
@@ -160,12 +158,38 @@ async def admin_get_random_user(callback : types.CallbackQuery, state : FSMConte
     await callback.message.delete()
     await callback.answer()
 
+@dp.callback_query_handler(tour_cb.filter(action="stat_vip_slot"))
+async def get_stat_vip_slot(callback : types.CallbackQuery, callback_data : dict):
+    all_payment = await get_payment_vip_slot(callback_data['id'])
+    amount_pay = await get_time_payment_vip_slot(callback_data['id'])
+    year_pay = amount_pay[0]
+    month_pay = amount_pay[1]
+    week_pay = amount_pay[2]
+    day_pay = amount_pay[3]
+    peak_time_year = amount_pay[4]
+    peak_time_month = amount_pay[5]
+    peak_time_week = amount_pay[6]
+    peak_time_day = amount_pay[7]
+    await callback.message.answer(f"Статистика по {callback_data['id']}\n"
+                                  f"\n"
+                                  f"Общее количество оплат: {all_payment}\n"
+                                  f"\n"
+                                  f"Пиковое время продаж/общее количество продаж\n"
+                                  f"День: {peak_time_day} | {day_pay}\n"
+                                  f"Неделя: {peak_time_week} | {week_pay}\n"
+                                  f"Месяц: {peak_time_month} | {month_pay}\n"
+                                  f"Год: {peak_time_year} | {year_pay}\n",
+                                  reply_markup=admin_back_stat_menu_ikb())
+    await callback.message.delete()
+    await callback.answer()
+
 
 
 # ADD ADMIN
 cb_words_list = ["add_admin", "check_admin_list", "back_general_admin", "statistic_count", "all_statistic",
-                 "user_click_stat", "free_agent_stat", "free_team_stat", "young_free_agent_stat", "young_free_team_stat",
-                 "back_stat_menu"]
+                 "user_click_stat", "free_agent_stat", "free_team_stat", "young_free_agent_stat",
+                 "young_free_team_stat", "back_stat_menu", "admin_add_news", "check_news", "confirm_add_news",
+                 "payment_statistic", "stat_vip_slot", "statistic_uc_shop"]
 
 @dp.callback_query_handler(lambda callback : callback.data in cb_words_list)
 async def all_callbacks(callback : types.CallbackQuery):
@@ -272,6 +296,37 @@ async def all_callbacks(callback : types.CallbackQuery):
                                           reply_markup=admin_statistic_ikb())
             await callback.message.delete()
             await callback.answer()
+        elif callback.data == "payment_statistic":
+            amount_pay_vip_slot = await get_all_payment_vip_slots()
+            amount_pay_uc = await get_all_payment_uc_shop()
+            amount_all_pay = amount_pay_uc + amount_pay_vip_slot
+            await callback.message.answer(f"Статистика по оплатам\n"
+                                          f"\n"
+                                          f"Общее количество оплат: {amount_all_pay}\n"
+                                          f"\n"
+                                          f"Детальная статистика:",
+                                          reply_markup=payment_statistic_ikb())
+            await callback.message.delete()
+            await callback.answer()
+        elif callback.data == "statistic_uc_shop":
+            all_payment = await get_all_payment_uc_shop()
+            amount_pay = await get_time_payment_uc_shop()
+            year_pay = amount_pay[0]
+            month_pay = amount_pay[1]
+            week_pay = amount_pay[2]
+            day_pay = amount_pay[3]
+            await callback.message.answer(f"Статистика по UC SHOP\n"
+                                          f"\n"
+                                          f"Общее количество оплат: {all_payment}\n"
+                                          f"\n"
+                                          f"Пиковое время продаж/общее количество продаж\n"
+                                          f"День:  | {day_pay}\n"
+                                          f"Неделя:  | {week_pay}\n"
+                                          f"Месяц:  | {month_pay}\n"
+                                          f"Год:  | {year_pay}\n",
+                                          reply_markup=admin_back_stat_menu_ikb())
+            await callback.message.delete()
+            await callback.answer()
         elif callback.data == 'statistic_count':
             await callback.message.delete()
             await callback.answer()
@@ -327,9 +382,8 @@ async def cb_conf_add_admin(callback : types.CallbackQuery, callback_data : dict
 async def cb_edit_admin(callback: types.CallbackQuery, callback_data: dict, state: FSMContext):
     ban = await check_ban_user(callback)
     if not ban:
-        admin_id = await get_admin_id(callback_data['id'])
         await callback.message.answer("Отправьте ID для выдачи админа:",
-                                      reply_markup=info_from_bd(admin_id[0]))
+                                      reply_markup=info_from_bd(callback_data['id']))
         await AddadminStatesGroup.new_admin_id.set()
         async with state.proxy() as data:
             data['a_id'] = callback_data['id']
@@ -699,35 +753,24 @@ async def get_random_user(message : types.Message, state : FSMContext):
                 number +=1
     elif data['where'] == "fa":
         agents = await get_random_users(data['amount'], "info_player")
-        for data in agents:
-            user_chat = await bot.get_chat(data[0])
-            await message.answer(f"#{number}\n"
-                                 f"\n"
-                                 f"ID: {data[0]}\n"
-                                 f"username: @{user_chat.username}")
-            number += 1
+        await get_random_user_part2(agents, message, number)
     elif data['where'] == "ft":
         agents = await get_random_users(data['amount'], "info_team")
-        for data in agents:
-            user_chat = await bot.get_chat(data[0])
-            await message.answer(f"#{number}\n"
-                                 f"\n"
-                                 f"ID: {data[0]}\n"
-                                 f"username: @{user_chat.username}")
+        await get_random_user_part2(agents, message, number)
     elif data['where'] == "youngfa":
         agents = await get_random_users(data['amount'], "young_player")
-        for data in agents:
-            user_chat = await bot.get_chat(data[0])
-            await message.answer(f"#{number}\n"
-                                 f"\n"
-                                 f"ID: {data[0]}\n"
-                                 f"username: @{user_chat.username}")
+        await get_random_user_part2(agents, message, number)
     elif data['where'] == "youngft":
         agents = await get_random_users(data['amount'], "young_team")
-        for data in agents:
-            user_chat = await bot.get_chat(data[0])
-            await message.answer(f"#{number}\n"
-                                 f"\n"
-                                 f"ID: {data[0]}\n"
-                                 f"username: @{user_chat.username}")
+        await get_random_user_part2(agents, message, number)
     await state.finish()
+
+
+async def get_random_user_part2(agents, message, number):
+    for data in agents:
+        user_chat = await bot.get_chat(data[0])
+        await message.answer(f"#{number}\n"
+                             f"\n"
+                             f"ID: {data[0]}\n"
+                             f"username: @{user_chat.username}")
+        number += 1

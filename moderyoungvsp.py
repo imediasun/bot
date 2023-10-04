@@ -15,10 +15,11 @@ from states import AddPracVIPStatesGroup
 @dp.message_handler(lambda message: message.text == "VIP SLOT PRAC")
 async def all_text(message: types.Message):
     user_id = message.from_user.id
+    admin_id = await get_admin_id(user_id)
     moder_id = await get_moder_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             await message.answer("Выберите действие:",
                                  reply_markup=admin_check_vip_prac_kb())
 
@@ -30,9 +31,10 @@ words_list = ["add_vip_prac", "check_all_vip_pracs", "delete"]
 async def all_callbacks(callback : types.CallbackQuery):
     user_id = callback.from_user.id
     ban = await cb_check_ban_user(callback)
+    admin_id = await get_admin_id(user_id)
     moder_id = await get_moder_id(user_id)
     if not ban:
-        if user_id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             if callback.data == 'add_vip_prac':
                 await callback.message.answer("Укажите время игр:",
                                               reply_markup=admin_put_time())

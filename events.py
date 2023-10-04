@@ -113,7 +113,7 @@ async def cb_buy_event_slot(callback : types.CallbackQuery, callback_data : dict
     await set_new_click(callback.from_user.id)
     if not ban:
         if amount_slots == 0:
-            await callback.message.answer(_("К сожалению слотов больше не осталось!", lang),
+            await callback.message.answer(_("К сожалению, слотов больше не осталось!", lang),
                                           reply_markup=back_pro_main(lang))
         else:
             payments = await get_payment()
@@ -136,7 +136,7 @@ async def cb_pay_event(callback : types.CallbackQuery):
     lang = await get_user_lang(callback.from_user.id)
     amount_slots = await get_amount_events(tour_id)
     if amount_slots == 0:
-        await callback.message.answer(_("К сожалению слотов больше не осталось!", lang),
+        await callback.message.answer(_("К сожалению, слотов больше не осталось!", lang),
                                       reply_markup=back_pro_main(lang))
     else:
         price = await get_price_event(tour_id)

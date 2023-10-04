@@ -20,61 +20,16 @@ async def cb_admin_yes_pay_vip_slot(callback : types.CallbackQuery, callback_dat
             desc_tour = await get_desc_event(data[9])
             price = await get_price_event(data[9])
             link = await get_link_event(data[9])
-            amount = await get_amount_events(data[9])
-            new_amount = int(amount)-1
-            await update_amount_event(data[9], new_amount)
-            if amount == 1:
-                await update_amount_event(data[9], 0)
         elif data[10] == 'prac':
             tour_name = await get_vip_prac_name(data[9])
             desc_tour = await get_desc_prac_vip(data[9])
             price = await get_price_vip_prac(data[9])
             link = await get_link_prac_vip(data[9])
-            amount = await get_amount_vip_prac(data[9])
-            new_amount = amount-1
-            await update_amount_vip_prac(data[9], new_amount)
-            if amount == 1:
-                await update_amount_vip_prac(data[9], 0)
         else:
             tour_name = await get_name_tour_vip_slot(data[9])
             desc_tour = await get_desc_vip_slot(data[9])
             price = await get_price_vip_slot(data[9])
             link = await get_link_vip_slot(data[9])
-            amounts = await get_amount_vip_slots(data[9])
-            amount_split = amounts.split('/')
-            if data[17] == "15":
-                amount = int(amount_split[0])
-                new_amount = f"{amount-1}/{amount_split[1]}/{amount_split[2]}/{amount_split[3]}"
-                await update_amount_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    time = await get_time_vip_slot(data[9])
-                    time_split = time.split('/')
-                    await update_time_vip_slot(data[9], f"/{time_split[1]}/{time_split[2]}/{time_split[3]}")
-            elif data[17] == "18":
-                amount = int(amount_split[1])
-                print(amount)
-                new_amount = f"{amount_split[0]}/{amount-1}/{amount_split[2]}/{amount_split[3]}"
-                await update_amount_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    time = await get_time_vip_slot(data[9])
-                    time_split = time.split('/')
-                    await update_time_vip_slot(data[9], f"{time_split[0]}//{time_split[2]}/{time_split[3]}")
-            elif data[17] == "21":
-                amount = int(amount_split[2])
-                new_amount = f"{amount_split[0]}/{amount_split[1]}/{amount-1}/{amount_split[3]}"
-                await update_amount_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    time = await get_time_vip_slot(data[9])
-                    time_split = time.split('/')
-                    await update_time_vip_slot(data[9], f"{time_split[0]}/{time_split[1]}//{time_split[3]}")
-            elif data[17] == "00":
-                amount = int(amount_split[3])
-                new_amount = f"{amount_split[0]}/{amount_split[1]}/{amount_split[2]}/{amount-1}"
-                await update_amount_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    time = await get_time_vip_slot(data[9])
-                    time_split = time.split('/')
-                    await update_time_vip_slot(data[9], f"{time_split[0]}/{time_split[1]}/{time_split[2]}/")
         await callback.message.answer(f"✅Успешная оплата №{data[8]}")
         await bot.send_message(chat_id=data[1],
                                text=f"✅{_('Оплата прошла успешно!', lang)}\n"
@@ -129,12 +84,21 @@ async def cb_no_pay_vip_slot(callback : types.CallbackQuery, callback_data : dic
         if data[10] == "event":
             tour_name = await get_event_name(data[9])
             desc_tour = await get_desc_event(data[9])
+            amount_slots = await get_amount_events(data[9])
+            remaining_slots = amount_slots + 1
+            await update_amount_event(data[9], remaining_slots)
         elif data[10] == 'prac':
             tour_name = await get_vip_prac_name(data[9])
             desc_tour = await get_desc_prac_vip(data[9])
+            amount_slots = await get_amount_vip_prac(data[9])
+            remaining_slots = amount_slots + 1
+            await update_amount_vip_prac(data[9], remaining_slots)
         else:
             tour_name = await get_name_tour_vip_slot(data[9])
             desc_tour = await get_desc_vip_slot(data[9])
+            amount_slots = await get_amount_vip_slot_time(data[9], data[17])
+            remaining_slots = amount_slots + 1
+            await update_amount_vip_slot(data[9], data[17], remaining_slots)
         await callback.message.answer(f"❌Не успешная оплата №{data[8]}")
         if profile == "pro":
             await bot.send_message(chat_id=data[1],
@@ -188,7 +152,7 @@ async def cb_get_cap_chat_vip(callback : types.CallbackQuery, callback_data : di
             tour_name = await get_event_name(data[9])
             desc_tour = await get_desc_event(data[9])
             amount = await get_amount2_events(data[9])
-            new_amount = amount-1
+            new_amount = amount - 1
             await update_amount2_event(data[9], new_amount)
             if new_amount == 0:
                 await delete_event(data[9])
@@ -196,47 +160,20 @@ async def cb_get_cap_chat_vip(callback : types.CallbackQuery, callback_data : di
             tour_name = await get_vip_prac_name(data[9])
             desc_tour = await get_desc_prac_vip(data[9])
             amount = await get_amount2_vip_prac(data[9])
-            new_amount = amount-1
+            new_amount = amount - 1
             await update_amount2_vip_prac(data[9], new_amount)
             if new_amount == 0:
                 await admin_delete_vip_prac(data[9])
         else:
             tour_name = await get_name_tour_vip_slot(data[9])
             desc_tour = await get_desc_vip_slot(data[9])
-            amounts = await get_amount2_vip_slots(data[9])
-            amount_split = amounts.split('/')
-            if data[17] == "15":
-                amount = int(amount_split[0])
-                new_amount = f"{amount-1}/{amount_split[1]}/{amount_split[2]}/{amount_split[3]}"
-                await update_amount2_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    await update_amount2_vip_slot(data[9], f"/{amount_split[1]}/{amount_split[2]}/{amount_split[3]}")
-                    if amounts == "1///":
-                        await delete_vip_slot(data[9])
-            elif data[17] == "18":
-                amount = int(amount_split[1])
-                new_amount = f"{amount_split[0]}/{amount-1}/{amount_split[2]}/{amount_split[3]}"
-                await update_amount2_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    await update_amount2_vip_slot(data[9], f"{amount_split[0]}//{amount_split[2]}/{amount_split[3]}")
-                    if amounts == "/1//":
-                        await delete_vip_slot(data[9])
-            elif data[17] == "21":
-                amount = int(amount_split[2])
-                new_amount = f"{amount_split[0]}/{amount_split[1]}/{amount-1}/{amount_split[3]}"
-                await update_amount2_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    await update_amount2_vip_slot(data[9], f"{amount_split[0]}/{amount_split[1]}//{amount_split[3]}")
-                    if amounts == "//1/":
-                        await delete_vip_slot(data[9])
-            elif data[17] == "00":
-                amount = int(amount_split[3])
-                new_amount = f"{amount_split[0]}/{amount_split[1]}/{amount_split[2]}/{amount-1}"
-                await update_amount2_vip_slot(data[9], new_amount)
-                if amount == 1:
-                    await update_amount2_vip_slot(data[9], f"{amount_split[0]}/{amount_split[1]}/{amount_split[2]}/")
-                    if amounts == "///1":
-                        await delete_vip_slot(data[9])
+            amount = await get_amount2_vip_slot_time(data[9], data[17])
+            new_amount = amount - 1
+            await update_amount2_vip_slot(data[9], data[17], new_amount)
+            amount_slots = await get_amount2_vip_slot(data[9])
+            total_amount_slots = sum(amount[0] for amount in amount_slots)
+            if total_amount_slots == 0:
+                await delete_vip_slot(data[9])
         await callback.message.answer(f"✅Заказ №{data[8]} успешно выполнен!")
         await bot.send_message(chat_id=all_payment_chat,
                                text=f"✅Заказ №{data[8]} успешно выполнен!\n"

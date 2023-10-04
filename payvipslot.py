@@ -47,9 +47,9 @@ async def send_check_vip_part1(callback, callback_data, state):
 
 async def send_check_vip_part2(amount_slots, callback, state, kb, callback_data, lang):
     if amount_slots == 0:
-        await callback.message.answer(f"{_('К сожалению слотов больше не осталось!', lang)}\n"
+        await callback.message.answer(f"{_('К сожалению, слотов больше не осталось!', lang)}\n"
                                       f"\n"
-                                      f"{_('Если вы уже совершили оплату, выберите другое мероприятие такой же стоимости и отправьте туда чек или же обратитесь в 💬Подержку за возвратом денежных средств!🤗', lang)}",
+                                      f"{_('Если вы уже совершили оплату, выберите другое мероприятие такой же стоимости и отправьте туда чек или же обратитесь в 💬Поддержку за возвратом денежных средств!🤗', lang)}",
                                       reply_markup=kb)
     else:
         async with state.proxy() as data:
@@ -66,6 +66,7 @@ async def cb_confirm_buy_vip_slot(callback : types.CallbackQuery, callback_data 
                                   reply_markup=ReplyKeyboardRemove())
     check = await get_check_vip_slot(callback_data['id'])
     await set_new_click(callback.from_user.id)
+    await update_buy_time(callback_data['id'])
     for data in check:
         if data[10] == "event":
             tour_name = await get_event_name(data[9])

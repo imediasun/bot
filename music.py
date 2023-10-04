@@ -66,6 +66,20 @@ async def news_text(message: types.Message):
             await get_popular_music()
 
 
+@dp.callback_query_handler(lambda c: c.data.startswith('get_popular_music_'))
+async def get_popular_music_for_user(callback: types.CallbackQuery):
+    global index
+    index = 0
+    ban = await cb_check_ban_user(callback)
+    if not ban:
+        music = callback.data.split('_')[3]
+        print(music)
+        music_file = await get_music_file(music)
+        bot = await callback.bot.me
+        await callback.message.answer_audio(audio=music_file,
+                                            caption=f"@{bot.username}")
+    await callback.answer()
+
 cb_words_list = ["next_all_music", "back_all_music", "next_popular_music", "back_popular_music", ]
 
 @dp.callback_query_handler(lambda callback : callback.data in cb_words_list)

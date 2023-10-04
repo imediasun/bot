@@ -134,7 +134,7 @@ async def cb_buy_vip_prac(callback : types.CallbackQuery, callback_data : dict):
     await set_new_click(callback.from_user.id)
     if not ban:
         if amount == 0:
-            await callback.message.answer(_("К сожалению слотов больше не осталось!", lang),
+            await callback.message.answer(_("К сожалению, слотов больше не осталось!", lang),
                                           reply_markup=back_vip_prac_ikb(lang))
         else:
             payments = await get_payment()

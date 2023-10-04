@@ -18,7 +18,7 @@ from states import AddCurrencyStatesGroup, AdminPayStatesGroup
 @dp.message_handler(lambda message: message.text == "💳PAYMENTS")
 async def all_text(message: types.Message):
     user_id = message.from_user.id
-    admin_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
         if user_id in admin_id:

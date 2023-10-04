@@ -79,6 +79,10 @@ def pay_vip_prac_ikb(pay_id, event_id, lang) -> InlineKeyboardMarkup:
 
 
 def back_vip_prac_ikb(lang) -> InlineKeyboardMarkup:
+    """
+
+    :rtype: object
+    """
     ikb = InlineKeyboardMarkup()
     back = InlineKeyboardButton(f'🔙{_("Назад", lang)}', callback_data='back_vip_prac')
     ikb.add(back)

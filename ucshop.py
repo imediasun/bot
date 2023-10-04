@@ -222,6 +222,7 @@ async def cb_confirm_pay_uc(callback: types.CallbackQuery, callback_data: dict):
     lang = await get_user_lang(user_id)
     ban = await cb_check_ban_user(callback)
     await set_new_click(callback.from_user.id)
+    await update_buy_time_uc(callback_data['id'])
     if not ban:
         await callback.message.answer(_("Ожидайте подтверждения платежа!", lang),
                                       reply_markup=ReplyKeyboardRemove())

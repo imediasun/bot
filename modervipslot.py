@@ -14,27 +14,34 @@ from youngkb import info_from_bd
 
 
 
-words_list = ["VIP SLOTS", "Добавить слот", "Просмотреть все слоты", "Qualificationㅤ", "1/4 STAGEㅤ",
+words_list = ["VIP SLOTS", "Добавить слот", "Просмотреть все слоты", "Удалить все слоты", "Qualificationㅤ", "1/4 STAGEㅤ",
               "1/2 STAGEㅤ", "FINAL STAGEㅤ", "GRAND-FINAL STAGEㅤ"]
 
 @dp.message_handler(lambda message: message.text in words_list)
-async def all_text(message: types.Message):
+async def all_text(message: types.Message, state : FSMContext):
     global index
     user_id = message.from_user.id
     moder_id = await get_moder_id(user_id)
+    admin_id = await get_admin_id(user_id)
     ban = await check_ban_user(message)
     if not ban:
-        if user_id in moder_id:
+        if user_id in moder_id or user_id in admin_id:
             if message.text == 'VIP SLOTS':
                 await message.answer("Выберите действие:",
                                      reply_markup=admin_vip_menu_kb())
             elif message.text == 'Добавить слот':
                 await message.answer("Укажите стадию турнира:",
                                      reply_markup=admin_stage_vip_kb())
+                tour_id = str(uuid4())
                 await VIPslotStateGroup.stage.set()
+                async with state.proxy() as data:
+                    data['tour_id'] = tour_id
             elif message.text == 'Просмотреть все слоты':
                 await message.answer("Выберите стадию:",
                                      reply_markup=admin_chek_vip_kb())
+            elif message.text == "Удалить все слоты":
+                await message.answer("Вы действительно хотите удалить все слоты?",
+                                     reply_markup=admin_delete_all_vs_ikb())
             else:
                 index = 0
                 if message.text == "Qualificationㅤ":
@@ -57,10 +64,47 @@ async def cb_delete_vip(callback: types.CallbackQuery, callback_data: dict):
     ban = await cb_check_ban_user(callback)
     if not ban:
         vip_slot = await get_vip_slot(callback_data['id'])
-        await cb_info_vip_slot(control_add_chat, vip_slot, callback)
         await delete_vip_slot(callback_data['id'])
         await callback.message.reply("Слот успешно удален!",
                                      reply_markup=admin_chek_vip_kb())
+        for data in vip_slot:
+            amount_slots = await get_amount_vip_slots_str(data[0])
+            time = await get_time_vip_slot_str(data[0])
+            if not data[3]:
+                await bot.send_message(chat_id=control_add_chat,
+                                       text=f"Удален VIP SLOT!\n"
+                                            f"\n"
+                                            f"{data[6]}\n"
+                                            f"\n"
+                                            f"{data[2]}\n"
+                                            f"\n"
+                                            f"{data[4]}\n"
+                                            f"TIME: {time}\n"
+                                            f"Количество: {amount_slots}\n"
+                                            f"Цена: {data[5]}\n"
+                                            f"\n"
+                                            f"{data[7]}\n"
+                                            f"ID: {data[1]}\n"
+                                            f"USERNAME: @{callback.from_user.username}",
+                                       reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
+            else:
+                await bot.send_photo(chat_id=control_add_chat,
+                                     photo=data[3],
+                                     caption=f"Удален VIP SLOT!\n"
+                                             f"\n"
+                                             f"{data[6]}\n"
+                                             f"\n"
+                                             f"{data[2]}\n"
+                                             f"\n"
+                                             f"{data[4]}\n"
+                                             f"TIME: {time}\n"
+                                             f"Количество: {amount_slots}\n"
+                                             f"Цена: {data[5]}\n"
+                                             f"\n"
+                                             f"{data[7]}\n"
+                                             f"ID: {data[1]}\n"
+                                             f"USERNAME: @{callback.from_user.username}",
+                                     reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
     await callback.message.delete()
     await callback.answer()
 
@@ -84,7 +128,44 @@ async def cb_conf_add_vip_slot(callback : types.CallbackQuery, callback_data : d
         await callback.message.answer("✅Слот успешно добавлен!",
                                       reply_markup=admin_kb())
         vip_slot = await get_vip_slot(callback_data['id'])
-        await cb_info_vip_slot(control_add_chat, vip_slot, callback)
+        for data in vip_slot:
+            amount_slots = await get_amount_vip_slots_str(data[0])
+            time = await get_time_vip_slot_str(data[0])
+            if not data[3]:
+                await bot.send_message(chat_id=control_add_chat,
+                                       text=f"Добавлен VIP SLOT!\n"
+                                            f"\n"
+                                            f"{data[6]}\n"
+                                            f"\n"
+                                            f"{data[2]}\n"
+                                            f"\n"
+                                            f"{data[4]}\n"
+                                            f"TIME: {time}\n"
+                                            f"Количество: {amount_slots}\n"
+                                            f"Цена: {data[5]}\n"
+                                            f"\n"
+                                            f"{data[7]}\n"
+                                            f"ID: {data[1]}\n"
+                                            f"USERNAME: @{callback.from_user.username}",
+                                       reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
+            else:
+                await bot.send_photo(chat_id=control_add_chat,
+                                     photo=data[3],
+                                     caption=f"Добавлен VIP SLOT!\n"
+                                             f"\n"
+                                             f"{data[6]}\n"
+                                             f"\n"
+                                             f"{data[2]}\n"
+                                             f"\n"
+                                             f"{data[4]}\n"
+                                             f"TIME: {time}\n"
+                                             f"Количество: {amount_slots}\n"
+                                             f"Цена: {data[5]}\n"
+                                             f"\n"
+                                             f"{data[7]}\n"
+                                             f"ID: {data[1]}\n"
+                                             f"USERNAME: @{callback.from_user.username}",
+                                     reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
     await callback.message.delete()
     await callback.answer()
 
@@ -97,7 +178,35 @@ async def cb_admin_next_vip_slot(callback : types.CallbackQuery, callback_data :
         vip_slots = await get_vip_slots(callback_data['id'])
         all_vip_slots = list(vip_slots)[index: index + 2]
         index += 2
-        await cb_info_vip_slot(callback.from_user.id, all_vip_slots, callback)
+        for data in all_vip_slots:
+            amount_slots = await get_amount_vip_slots_str(data[0])
+            time = await get_time_vip_slot_str(data[0])
+            if not data[3]:
+                await callback.message.answer(f"{data[6]}\n"
+                                              f"\n"
+                                              f"{data[2]}\n"
+                                              f"\n"
+                                              f"{data[4]}\n"
+                                              f"TIME: {time}\n"
+                                              f"\n"
+                                              f"Количество: {amount_slots}\n"
+                                              f"Цена: {data[5]}\n"
+                                              f"\n"
+                                              f"{data[7]}",
+                                              reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
+            else:
+                await callback.message.answer(f"{data[6]}\n"
+                                              f"\n"
+                                              f"{data[2]}\n"
+                                              f"\n"
+                                              f"{data[4]}\n"
+                                              f"TIME: \n"
+                                              f"\n"
+                                              f"Количество: {amount_slots}\n"
+                                              f"Цена: {data[5]}\n"
+                                              f"\n"
+                                              f"{data[7]}",
+                                              reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
         if len(all_vip_slots) < 2:
             await callback.message.answer("Это все слоты!")
         else:
@@ -107,6 +216,29 @@ async def cb_admin_next_vip_slot(callback : types.CallbackQuery, callback_data :
     await callback.answer()
 
 
+cb_words_list = ["delete_all_vip_slot", "no_delete_all_vip_slot"]
+
+@dp.callback_query_handler(lambda callback : callback.data in cb_words_list)
+async def all_callbacks(callback : types.CallbackQuery):
+    user_id = callback.from_user.id
+    ban = await cb_check_ban_user(callback)
+    moder = await get_moder_id(user_id)
+    admin = await get_admin_id(user_id)
+    if not ban:
+        if user_id in moder or user_id in admin:
+            if callback.data == 'delete_all_vip_slot':
+                await delete_all_vip_slot()
+                await callback.message.answer("Все VIP Slots успешно удалены!")
+                await bot.send_message(chat_id=control_add_chat,
+                                       text=f"Удалены все VIP SLOTS!\n"
+                                            f"\n"
+                                            f"ID: {callback.from_user.id}\n"
+                                            f"username: {callback.from_user.username}")
+            elif callback.data == 'no_delete_all_vip_slot':
+                await callback.message.answer("Вы вернулись в меню модератора",
+                                              reply_markup=admin_kb())
+    await callback.message.delete()
+    await callback.answer()
 
 
 
@@ -141,14 +273,7 @@ async def check_load_time_vs(message : types.Message):
 @dp.message_handler(state=VIPslotStateGroup.time)
 async def load_time_vip_slot(message : types.Message, state : FSMContext):
     async with state.proxy() as data:
-        if message.text == "15:00":
-            data['time'] = "15:00///"
-        elif message.text == "18:00":
-            data['time'] = "/18:00//"
-        elif message.text == "21:00":
-            data['time'] = "//21:00/"
-        elif message.text == "18:00/21:00":
-            data['time'] = "/18:00/21:00/"
+        data['time'] = message.text
     await message.answer("Отправьте баннер турнира:",
                          reply_markup=info_from_bd("Пропустить"))
     await VIPslotStateGroup.next()
@@ -226,10 +351,13 @@ async def check_load_link_vip(message : types.Message):
 
 @dp.message_handler(state=VIPslotStateGroup.link)
 async def load_link_vip_slot(message : types.Message, state : FSMContext):
+    user_id = message.from_user.id
     async with state.proxy() as data:
         data['link'] = message.text
     tour_id = str(uuid4())
-    await create_vip_slots(state, message.from_user.id, tour_id)
+    times = data['time'].split('/')
+    amounts = data['amount'].split('/')
+    await create_vip_slots(state, user_id, tour_id, times, amounts)
     if not data['photo']:
         await message.answer(f"{data['tour_name']}\n"
                              f"\n"
@@ -238,7 +366,7 @@ async def load_link_vip_slot(message : types.Message, state : FSMContext):
                              f"{data['desc']}\n"
                              f"TIME: {data['time']}\n"
                              f"\n"
-                             f"Количество: {data['amount']}\n"  
+                             f"Количество: {data['amount']}\n"
                              f"Цена: {data['price']}\n"
                              f"\n"
                              f"{data['link']}")
@@ -251,7 +379,7 @@ async def load_link_vip_slot(message : types.Message, state : FSMContext):
                                            f"{data['desc']}\n"
                                            f"TIME: {data['time']}\n"
                                            f"\n"
-                                           f"Количество: {data['amount']}\n"  
+                                           f"Количество: {data['amount']}\n"
                                            f"Цена: {data['price']}\n"
                                            f"\n"
                                            f"{data['link']}")
@@ -292,16 +420,7 @@ async def check_load_new_time_vs(message: types.Message):
 @dp.message_handler(state=VIPslotStateGroup.new_time)
 async def load_new_time_vip_slot(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        if message.text == "15:00":
-            data['time'] = "15:00///"
-        elif message.text == "18:00":
-            data['time'] = "/18:00//"
-        elif message.text == "21:00":
-            data['time'] = "//21:00/"
-        elif message.text == "18:00/21:00":
-            data['time'] = "/18:00/21:00/"
-        else:
-            data['time'] = message.text
+        data['time'] = message.text
     await message.answer("Отправьте баннер турнира:",
                          reply_markup=info_from_bd("Пропустить"))
     await VIPslotStateGroup.next()
@@ -372,7 +491,7 @@ async def load_new_desc_vip(message: types.Message, state: FSMContext):
     else:
         async with state.proxy() as data:
             data['desc'] = message.text
-    amount = await get_amount_vip_slots(data['tour_id'])
+    amount = await get_amount_vip_slots_str(data['tour_id'])
     await message.answer("Отправьте количество слотов:",
                          reply_markup=info_from_bd(amount))
     await VIPslotStateGroup.next()
@@ -385,14 +504,7 @@ async def check_new_load_amount_vip_slot(message : types.Message):
 @dp.message_handler(state=VIPslotStateGroup.new_amount)
 async def load_new_amount_vip_slot(message : types.Message, state : FSMContext):
     async with state.proxy() as data:
-        if data['time'] == "15:00///":
-            data['amount'] = f"{message.text}///"
-        elif data['time'] == "/18:00//":
-            data['amount'] = f"/{message.text}//"
-        elif data['time'] == "//21:00/":
-            data['amount'] = f"//{message.text}/"
-        else:
-            data['amount'] = message.text
+        data['amount'] = message.text
     await message.answer("Отправьте ссылку на турнир:",
                          reply_markup=info_from_bd("Пропустить"))
     await VIPslotStateGroup.next()
@@ -404,6 +516,7 @@ async def check_load_new_link_vip(message : types.Message):
 
 @dp.message_handler(state=VIPslotStateGroup.new_link)
 async def load_new_link_vip_slot(message : types.Message, state : FSMContext):
+    user_id = message.from_user.id
     if message.text == "Пропустить":
         async with state.proxy() as data:
             link = await get_link_vip_slot(data['tour_id'])
@@ -411,7 +524,9 @@ async def load_new_link_vip_slot(message : types.Message, state : FSMContext):
     else:
         async with state.proxy() as data:
             data['link'] = message.text
-    await update_vip_slots(state, message.from_user.id)
+    times = data['time'].split('/')
+    amounts = data['amount'].split('/')
+    await update_vip_slots(state, user_id, times, amounts)
     if not data['photo']:
         await message.answer(f"{data['tour_name']}\n"
                              f"\n"
@@ -428,7 +543,7 @@ async def load_new_link_vip_slot(message : types.Message, state : FSMContext):
         await message.answer_photo(photo=data['photo'],
                                    caption=f"{data['tour_name']}\n"
                                            f"\n"
-                                           f"{data['stage']}"
+                                           f"{data['stage']}\n"
                                            f"\n"
                                            f"{data['desc']}\n"
                                            f"TIME: {data['time']}\n"
@@ -441,41 +556,6 @@ async def load_new_link_vip_slot(message : types.Message, state : FSMContext):
                          reply_markup=admin_confirm_vip_slot_ikb(data['tour_id']))
     await state.finish()
 
-async def cb_info_vip_slot(chat_id, vip_slot, callback):
-    for data in vip_slot:
-        if not data[3]:
-            await bot.send_message(chat_id=chat_id,
-                                   text=f"Удален VIP slot!\n"
-                                        f"{data[6]}\n"
-                                        f"\n"
-                                        f"{data[2]}"
-                                        f"\n"
-                                        f"{data[4]}\n"
-                                        f"\n"
-                                        f"Цена: {data[5]}\n"
-                                        f"\n"
-                                        f"{data[7]}\n"
-                                        f"\n"
-                                        f"ID: {data[1]}\n"
-                                        f"USERNAME: @{callback.from_user.username}",
-                                   reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
-        else:
-            await bot.send_photo(chat_id=chat_id,
-                                 photo=data[3],
-                                 caption=f"Удален VIP slot!\n"
-                                         f"{data[6]}\n"
-                                         f"\n"
-                                         f"{data[2]}"
-                                         f"\n"
-                                         f"{data[4]}\n"
-                                         f"\n"
-                                         f"Цена: {data[5]}\n"
-                                         f"\n"
-                                         f"{data[7]}\n"
-                                         f"\n"
-                                         f"ID: {data[1]}\n"
-                                         f"USERNAME: @{callback.from_user.username}",
-                                 reply_markup=admin_edit_post_vip_slot_ikb(data[0]))
 
 async def send_info_vip_slot(stage, message):
     global index
@@ -487,15 +567,16 @@ async def send_info_vip_slot(stage, message):
         all_vip_slots = list(vip_slots)[index: index + 2]
         index += 2
         for data in all_vip_slots:
+            amount_slots = await get_amount_vip_slots_str(data[0])
+            time = await get_time_vip_slot_str(data[0])
             if not data[3]:
                 await message.answer(f"{data[6]}\n"
                                      f"\n"
                                      f"{data[2]}\n"
                                      f"\n"
                                      f"{data[4]}\n"
-                                     f"TIME: {data[8]}\n"
-                                     f"\n"
-                                     f"Количество: {data[9]}\n"
+                                     f"TIME: {time}\n"
+                                     f"Количество: {amount_slots}\n"
                                      f"Цена: {data[5]}\n"
                                      f"\n"
                                      f"{data[7]}",
@@ -507,9 +588,8 @@ async def send_info_vip_slot(stage, message):
                                                    f"{data[2]}\n"
                                                    f"\n"
                                                    f"{data[4]}\n"
-                                                   f"TIME: {data[8]}\n"
-                                                   f"\n"
-                                                   f"Количество: {data[9]}\n"
+                                                   f"TIME: {time}\n"
+                                                   f"Количество: {amount_slots}\n"
                                                    f"Цена: {data[5]}\n"
                                                    f"\n"
                                                    f"{data[7]}",
