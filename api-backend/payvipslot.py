@@ -8,7 +8,7 @@ from keyboards import *
 from states import BuyVipSlotStatesGroup
 from translations import _
 from youngkb import main_young_menu_ikb, info_from_bd, back_vip_prac_ikb
-
+from database.db import *
 
 @dp.callback_query_handler(tour_cb.filter(action='send_check_vip_slot'))
 async def cb_send_check_vip_slot(callback : types.CallbackQuery, callback_data : dict, state : FSMContext):

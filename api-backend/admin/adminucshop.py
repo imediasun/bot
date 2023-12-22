@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from uuid import uuid4
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -5,12 +8,11 @@ from aiogram.dispatcher import FSMContext
 from main import dp, bot
 from config import *
 from hendlers import check_ban_user, cb_check_ban_user
-from database import *
 from keyboards import *
 from translations import _
 from youngkb import *
 from states import UCStatesGroup, BuyUCStatesGroup
-
+from database.db import *
 
 @dp.message_handler(lambda message: message.text == "💸UC SHOPㅤ")
 async def cd_admin(message: types.Message):

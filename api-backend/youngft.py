@@ -9,7 +9,7 @@ from keyboards import *
 from youngkb import *
 from translations import _
 from states import PracTeamStateGroup
-
+from database.db import *
 
 @dp.message_handler(lambda message: message.text == '👥Free teamㅤ')
 async def all_text(message: types.Message):

@@ -9,7 +9,7 @@ from keyboards import *
 from youngkb import *
 from translations import _
 from states import PracAgentStateGroup
-
+from database.db import *
 
 
 @dp.message_handler(lambda message: message.text == '👤Free agentㅤ')

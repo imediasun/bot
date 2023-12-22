@@ -5,7 +5,7 @@ from main import dp
 from keyboards import *
 from translations import _
 from youngkb import back_young_main_kb, next_prac, main_young_menu_ikb
-
+from database.db import *
 
 @dp.message_handler(lambda message: message.text == "📋Practice game")
 async def all_text(message: types.Message):

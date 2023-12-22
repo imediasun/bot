@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from uuid import uuid4
 import requests
 from aiogram import types
@@ -8,11 +11,11 @@ from main import dp, bot
 from config import *
 from hendlers import check_ban_user, cb_check_ban_user
 
-from database import *
+from database.db import *
 from keyboards import *
 from youngkb import *
 from states import AdminMusicStatesGroup
-
+from database.db import *
 
 words_list = ["MUSIC", "Обновить", "Загрузить", 'Просмотреть треки']
 

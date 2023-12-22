@@ -4,7 +4,7 @@ from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp
 from keyboards import *
 from translations import _
-
+from database.db import *
 
 words_list = ["📋Tournament"]
 

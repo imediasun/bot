@@ -8,7 +8,7 @@ from main import dp, bot
 from keyboards import *
 from states import TourStateGroup
 from youngkb import info_from_bd
-
+from database.db import *
 
 
 words_list = ["TOURNAMENT", "🔙Вернутся в меню админа", "Добавить турнир", "Просмотреть все турниры"]

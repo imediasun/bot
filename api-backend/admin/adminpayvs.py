@@ -1,14 +1,17 @@
+import sys
+sys.path.append('..')
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
 from main import dp, bot
 from config import admin_get_cap_chat, all_payment_chat
-from database import *
+from database.db import *
 from keyboards import *
 from states import BuyVipSlotStatesGroup
 from translations import _
 from youngkb import main_young_menu_ikb
-
+from database.db import *
 
 @dp.callback_query_handler(tour_cb.filter(action='yes_pay_vip_slot'))
 async def cb_admin_yes_pay_vip_slot(callback : types.CallbackQuery, callback_data : dict):

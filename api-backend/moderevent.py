@@ -8,7 +8,7 @@ from main import dp, bot
 from keyboards import *
 from youngkb import info_from_bd
 from states import EventStateGroup
-
+from database.db import *
 
 
 words_list = ['EVENT', "Добавить ивент", "Просмотреть все ивенты", "🕒15:00ㅤ", "🕒18:00ㅤ", "🕒21:00ㅤ",

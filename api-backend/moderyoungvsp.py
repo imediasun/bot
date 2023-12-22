@@ -8,7 +8,7 @@ from main import dp, bot
 from keyboards import *
 from youngkb import *
 from states import AddPracVIPStatesGroup
-
+from database.db import *
 
 
 @dp.message_handler(lambda message: message.text == "VIP SLOT PRAC")

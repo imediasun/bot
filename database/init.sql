@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS language(
                 profile TEXT,
                 amount_clicks INTEGER,
                 time_log TEXT);
+
 CREATE TABLE IF NOT EXISTS info_player(
                 user_id INTEGER PRIMARY KEY,
                 nickname TEXT,
@@ -61,13 +62,13 @@ CREATE TABLE IF NOT EXISTS info_team(
                 user_id INTEGER,
                 format TEXT,
                 photo TEXT,
-                desc TEXT,
+                "desc" TEXT,
                 url TEXT);
     CREATE TABLE IF NOT EXISTS practice_game(
                 prac_id TEXT PRIMARY KEY,
                 user_id INTEGER,
                 photo TEXT,
-                desc TEXT,
+                "desc" TEXT,
                 url TEXT);
 
     CREATE TABLE IF NOT EXISTS vip_slots(
@@ -75,7 +76,7 @@ CREATE TABLE IF NOT EXISTS info_team(
                 user_id INTEGER,
                 stage TEXT,
                 photo TEXT,
-                desc TEXT,
+                "desc" TEXT,
                 price INTEGER,
                 tour_name TEXT,
                 ds_link TEXT,
@@ -92,7 +93,7 @@ CREATE TABLE IF NOT EXISTS info_team(
                 time TEXT,
                 photo TEXT,
                 price TEXT,
-                desc TEXT,
+                "desc" TEXT,
                 tour_name TEXT,
                 link TEXT,
                 amount INTEGER,
@@ -104,7 +105,7 @@ CREATE TABLE IF NOT EXISTS info_team(
                 time TEXT,
                 photo TEXT,
                 price TEXT,
-                desc TEXT,
+                "desc" TEXT,
                 tour_name TEXT,
                 link TEXT,
                 amount INTEGER,
@@ -175,7 +176,7 @@ CREATE TABLE IF NOT EXISTS info_team(
                 user_id INTEGER,
                 artist TEXT,
                 music_name TEXT,
-                file BLOB,
+                file BYTEA,
                 kind TEXT);
     CREATE TABLE IF NOT EXISTS rate(
                 currency TEXT PRIMARY KEY,
@@ -183,7 +184,7 @@ CREATE TABLE IF NOT EXISTS info_team(
     CREATE TABLE IF NOT EXISTS send_mess(
                 id TEXT PRIMARY KEY,
                 user_id INTEGER,
-                desc TEXT,
+                "desc" TEXT,
                 photo TEXT,
                 link TEXT,
                 active TEXT);

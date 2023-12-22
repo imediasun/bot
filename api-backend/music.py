@@ -7,7 +7,7 @@ from keyboards import *
 from translations import _
 from youngkb import *
 from states import MusicStatesGroup
-
+from database.db import *
 
 words_list = ["🎶MUSIC", "🔍Поиск", "🚀Новинки", "🔥Популярная"]
 

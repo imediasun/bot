@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 import requests
@@ -8,11 +11,11 @@ from main import dp, bot
 from config import *
 from hendlers import cb_check_ban_user, check_ban_user
 
-from database import *
+from database.db import *
 from keyboards import *
 from youngkb import *
 from states import AddCurrencyStatesGroup, AdminPayStatesGroup
-
+from database.db import *
 
 
 @dp.message_handler(lambda message: message.text == "💳PAYMENTS")

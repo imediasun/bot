@@ -5,12 +5,11 @@ from config import before_post_chat
 from main import dp, bot
 from hendlers import check_ban_user, cb_check_ban_user, is_valid_url, set_new_click
 
-from database import *
 from keyboards import *
 from youngkb import info_from_bd
 from translations import _
 from states import FreeagentStateGroup
-
+from database.db import *
 
 @dp.message_handler(lambda message: message.text == '👤Free agent')
 async def all_text(message: types.Message):

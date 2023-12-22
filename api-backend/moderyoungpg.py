@@ -8,7 +8,7 @@ from main import dp, bot
 from keyboards import *
 from youngkb import *
 from states import AddPracStatesGroup
-
+from database.db import *
 
 
 

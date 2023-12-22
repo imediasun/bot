@@ -7,7 +7,7 @@ from main import dp
 from keyboards import *
 from translations import _
 from youngkb import vip_prac_time_ikb, back_vip_prac_ikb, buy_vip_prac_ikb, next_vip_prac_ikb, pay_vip_prac_ikb
-
+from database.db import *
 
 @dp.message_handler(lambda message: message.text == "👑VIP Slotsㅤ")
 async def all_text(message: types.Message):

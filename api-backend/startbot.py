@@ -1,10 +1,14 @@
-from aiogram import executor
+import sys
+sys.path.append(".")
 
-from database import db_start
+from database.db import *
+
+from aiogram import executor
 
 
 async def on_startup(_):
-    await db_start()
+
+   await db_start()
 
 
 if __name__ == '__main__':
@@ -32,12 +36,12 @@ if __name__ == '__main__':
     from moderyoungpg import dp
     from moderyoungvsp import dp
     # admin
-    from admin import dp
-    from adminban import dp
-    from adminmusic import dp
-    from adminpayment import dp
-    from adminpayvs import dp
-    from adminucshop import dp
+    from admin.admin import dp
+    from admin.adminban import dp
+    from admin.adminmusic import dp
+    from admin.adminpayment import dp
+    from admin.adminpayvs import dp
+    from admin.adminucshop import dp
     executor.start_polling(dp,
                            skip_updates=True,
                            on_startup=on_startup)

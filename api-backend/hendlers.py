@@ -4,12 +4,11 @@ from aiogram.dispatcher import FSMContext
 
 from main import dp
 
-from database import *
 from keyboards import *
 from youngkb import main_young_menu_ikb
 from states import *
 from translations import _
-
+from database.db import *
 
 @dp.message_handler(commands=['start'])
 async def cd_start(message: types.Message):

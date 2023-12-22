@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
@@ -5,12 +8,12 @@ from main import dp, bot
 from config import *
 from hendlers import check_ban_user, cb_check_ban_user
 
-from database import *
+from database.db import *
 from keyboards import *
 from youngkb import *
 from translations import _
 from states import BanStatesGroup
-
+from database.db import *
 
 
 words_list = ["🛑BAN/UNBAN", "🔍Просмотреть анкеты"]

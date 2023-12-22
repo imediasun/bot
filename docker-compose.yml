@@ -4,10 +4,14 @@ services:
     container_name: postgres
     image: postgres:14.0
     environment:
+      POSTGRES_DB: database_dev
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
       POSTGRES_HOST_AUTH_METHOD: trust
     env_file:
       - .env
+    expose:
+      - 5432
     ports:
       - "5432:5432"
     volumes:
@@ -22,6 +26,7 @@ services:
       - postgres
     stdin_open: true
     tty: true
+    command: ["python3", "startbot.py"]
     volumes:
       - ./api-backend:/var/www
     env_file:

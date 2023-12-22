@@ -11,7 +11,7 @@ from keyboards import *
 from translations import _
 from states import BuyUCStatesGroup
 from youngkb import info_from_bd, main_young_menu_ikb
-
+from database.db import *
 
 
 

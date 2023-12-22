@@ -1,212 +1,29 @@
-import sqlite3 as sq
+import sys
+sys.path.append('..')
+
+import os
+import psycopg2
+from dotenv import load_dotenv
 import datetime
 
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+load_dotenv()
 
+DB_HOST = os.getenv("DB_HOST")
+DB_NAME = os.getenv("POSTGRES_DB")
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 async def db_start():
     global db, cur
 
-    db = sq.connect('../database/pubgbot.db')
+    db = psycopg2.connect(
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        host=DB_HOST
+    )
     cur = db.cursor()
-
-    cur.execute("CREATE TABLE IF NOT EXISTS language("
-                "user_id INTEGER PRIMARY KEY,"
-                "language TEXT,"
-                "currency TEXT,"
-                "block INTEGER,"
-                "reason TEXT,"
-                "ban_time TEXT,"
-                "profile TEXT,"
-                "amount_clicks INTEGER,"
-                "time_log TEXT)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS info_player("
-                "user_id INTEGER PRIMARY KEY,"
-                "nickname TEXT,"
-                "age TEXT,"
-                "teamspeak TEXT,"
-                "teamspeak1 TEXT,"
-                "device TEXT,"
-                "tournament TEXT,"
-                "finals TEXT,"
-                "highilights TEXT,"
-                "description TEXT,"
-                "contact TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS young_player("
-                "user_id INTEGER PRIMARY KEY,"
-                "nickname TEXT,"
-                "age TEXT,"
-                "teamspeak TEXT,"
-                "teamspeak1 TEXT,"
-                "device TEXT,"
-                "practice_game TEXT,"
-                "highilights TEXT,"
-                "description TEXT,"
-                "contact TEXT)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS info_team("
-                "user_id INTEGER PRIMARY KEY,"
-                "team_name TEXT,"
-                "age TEXT,"
-                "teamspeak TEXT,"
-                "teamspeak1 TEXT,"
-                "role TEXT,"
-                "device TEXT,"
-                "tournament TEXT,"
-                "finals TEXT,"
-                "description TEXT,"
-                "contact TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS young_team("
-                "user_id INTEGER PRIMARY KEY,"
-                "team_name TEXT,"
-                "age TEXT,"
-                "teamspeak TEXT,"
-                "teamspeak1 TEXT,"
-                "role TEXT,"
-                "device TEXT,"
-                "practice_game TEXT,"
-                "description TEXT,"
-                "contact TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS info_tour("
-                "tour_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "format TEXT,"
-                "photo TEXT,"
-                "desc TEXT,"
-                "url TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS practice_game("
-                "prac_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "photo TEXT,"
-                "desc TEXT,"
-                "url TEXT)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS vip_slots("
-                "tour_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "stage TEXT,"
-                "photo TEXT,"
-                "desc TEXT,"
-                "price INTEGER,"
-                "tour_name TEXT,"
-                "ds_link TEXT,"
-                "time TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS available_vip_slots("
-                "tour_id TEXT,"
-                "time TEXT,"
-                "amount_busy INTEGER,"
-                "amount INTEGER)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS prac_vip_slot("
-                "tour_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "time TEXT,"
-                "photo TEXT,"
-                "price TEXT,"
-                "desc TEXT,"
-                "tour_name TEXT,"
-                "link TEXT,"
-                "amount INTEGER,"
-                "amount2 INTEGER)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS events("
-                "tour_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "time TEXT,"
-                "photo TEXT,"
-                "price TEXT,"
-                "desc TEXT,"
-                "tour_name TEXT,"
-                "link TEXT,"
-                "amount INTEGER,"
-                "amount2 INTEGER)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS payments("
-                "id INTEGER PRIMARY KEY,"
-                "user_id INTEGER,"
-                "bank TEXT,"
-                "card TEXT,"
-                "currency TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS uc_package("
-                "id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "photo TEXT,"
-                "price TEXT,"
-                "amount_uc TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS buy_vip_slot("
-                "id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "username TEXT,"
-                "proof TEXT,"
-                "proof_d TEXT,"
-                "amount TEXT,"
-                "currency TEXT,"
-                "bank TEXT,"
-                "pay_number TEXT,"
-                "vip_slot_id TEXT,"
-                "format TEXT,"
-                "logo TEXT,"
-                "logo_d TEXT,"
-                "team_name TEXT,"
-                "team_tag TEXT,"
-                "cap TEXT,"
-                "reason TEXT,"
-                "time TEXT,"
-                "buy_time TEXT)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS buy_uc("
-                "id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "proof TEXT,"
-                "proof_d TEXT,"
-                "amount TEXT,"
-                "currency TEXT,"
-                "amount_uc TEXT,"
-                "bank TEXT,"
-                "pay_number TEXT,"
-                "user_name TEXT,"
-                "game_id TEXT,"
-                "nick TEXT,"
-                "reason TEXT,"
-                "buy_time TEXT)")
-
-    cur.execute("CREATE TABLE IF NOT EXISTS news("
-                "news_id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "text TEXT,"
-                "url TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS admin_table("
-                "admin_id INTEGER PRIMARY KEY,"
-                "user_id INTEGER,"
-                "admin_username TEXT,"
-                "job_title TEXT,"
-                "type TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS music("
-                "id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "artist TEXT,"
-                "music_name TEXT,"
-                "file BLOB,"
-                "kind TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS rate("
-                "currency TEXT PRIMARY KEY,"
-                "amount TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS send_mess("
-                "id TEXT PRIMARY KEY,"
-                "user_id INTEGER,"
-                "desc TEXT,"
-                "photo TEXT,"
-                "link TEXT,"
-                "active TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS uc_active("
-                "id INTEGER PRIMARY KEY,"
-                "user_id INTEGER,"
-                "active INTEGER,"
-                "reason TEXT,"
-                "photo TEXT,"
-                "text TEXT)")
-    db.commit()
 
 
 # LANGUAGE

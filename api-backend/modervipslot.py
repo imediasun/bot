@@ -9,7 +9,7 @@ from main import dp, bot
 from keyboards import *
 from states import VIPslotStateGroup
 from youngkb import info_from_bd
-
+from database.db import *
 
 
 

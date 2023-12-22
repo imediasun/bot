@@ -10,7 +10,7 @@ from keyboards import *
 from youngkb import info_from_bd, main_young_menu_ikb
 from translations import _
 from states import HelpStatesGroup, AnswerStatesGroup
-
+from database.db import *
 
 words_list = ["💬Поддержка", "💬SUPPORT", "💬Destek", '💬Підтримка', "💬Қолдау", "💬Қўллаб-қувватлаш"]
 

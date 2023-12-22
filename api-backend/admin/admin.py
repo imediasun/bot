@@ -1,4 +1,8 @@
+import sys
+sys.path.append('..')
+
 import asyncio
+
 from uuid import uuid4
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -7,7 +11,7 @@ from main import dp, bot
 from config import *
 from hendlers import check_ban_user, cb_check_ban_user, is_valid_url
 
-from database import *
+from database.db import *
 from keyboards import *
 from youngkb import *
 from states import AddadminStatesGroup, AdminSendMessagesStatesGroup, AddNewsStatesGroup, GetRandomUserStatesGroup
