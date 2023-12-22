@@ -3,7 +3,6 @@ from aiogram import types
 from main import dp
 from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 
-from database import *
 from keyboards import *
 from translations import _
 from youngkb import *

@@ -5,7 +5,6 @@ from aiogram.dispatcher import FSMContext
 from config import control_add_chat
 from hendlers import check_ban_user, cb_check_ban_user, is_valid_url
 from main import dp, bot
-from database import *
 from keyboards import *
 from states import TourStateGroup
 from youngkb import info_from_bd

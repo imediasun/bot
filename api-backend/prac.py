@@ -2,7 +2,6 @@ from aiogram import types
 
 from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp
-from database import *
 from keyboards import *
 from translations import _
 from youngkb import back_young_main_kb, next_prac, main_young_menu_ikb

@@ -4,7 +4,6 @@ from aiogram.dispatcher import FSMContext
 from hendlers import cb_check_ban_user, set_new_click
 from main import dp, bot
 from config import admin_pay_slot, admin_get_cap_chat
-from database import *
 from keyboards import *
 from states import BuyVipSlotStatesGroup
 from translations import _

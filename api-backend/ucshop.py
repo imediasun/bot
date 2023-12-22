@@ -7,7 +7,6 @@ from config import active_uc_id, admin_pay_uc, admin_get_uc, ceo
 from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp, bot
 
-from database import *
 from keyboards import *
 from translations import _
 from states import BuyUCStatesGroup

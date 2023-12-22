@@ -7,7 +7,7 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 async def db_start():
     global db, cur
 
-    db = sq.connect('pubgbot.db')
+    db = sq.connect('../database/pubgbot.db')
     cur = db.cursor()
 
     cur.execute("CREATE TABLE IF NOT EXISTS language("

@@ -5,7 +5,6 @@ from config import before_post_chat
 from hendlers import cb_check_ban_user, check_ban_user, is_valid_url, set_new_click
 from main import dp, bot
 
-from database import *
 from keyboards import *
 from youngkb import *
 from translations import _

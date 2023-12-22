@@ -6,7 +6,6 @@ from config import admin_support_chat, ceo
 from hendlers import check_ban_user, cb_check_ban_user, set_new_click
 from main import dp, bot
 
-from database import *
 from keyboards import *
 from youngkb import info_from_bd, main_young_menu_ikb
 from translations import _
